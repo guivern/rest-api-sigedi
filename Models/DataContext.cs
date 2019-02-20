@@ -15,7 +15,21 @@ namespace rest_api_sigedi.Models
                 {
                     Id = 1, 
                     Nombre="Administrador", 
-                    Descripcion="Posee todos los permisos del sistema",
+                    Descripcion="Personal encargado de la administración del sistema, posee todos los permisos",
+                    Activo = true
+                },
+                new Rol
+                {
+                    Id = 2, 
+                    Nombre="Repartidor", 
+                    Descripcion="Personal encargado de la recepción y distribución de artículos",
+                    Activo = true
+                },
+                new Rol
+                {
+                    Id = 3, 
+                    Nombre="Cajero", 
+                    Descripcion="Personal encargado de registrar las rendiciones y recibir las devoluciones de los vendedores",
                     Activo = true
                 }
             );
