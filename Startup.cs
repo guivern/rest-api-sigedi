@@ -48,7 +48,7 @@ namespace RestApiSigedi
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            /* 
+
             // Add JWT support
             services
             .AddAuthentication(options =>
@@ -78,7 +78,7 @@ namespace RestApiSigedi
                 .Build();
 
                 config.Filters.Add(new AuthorizeFilter(policy));
-            });*/
+            });
 
             // CORS
             services.AddCors();
@@ -103,7 +103,7 @@ namespace RestApiSigedi
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 )
-            //.UseAuthentication()
+            .UseAuthentication()
             .UseHttpsRedirection()
             .UseMvc();
         }
