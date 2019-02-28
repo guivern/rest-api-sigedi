@@ -69,7 +69,7 @@ namespace rest_api_sigedi.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(long id, TDto dto)
+        public virtual async Task<IActionResult> Update(long id, TDto dto)
         {
             if (id != dto.Id || dto.Id == null) return BadRequest();
 
