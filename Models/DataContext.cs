@@ -43,5 +43,6 @@ namespace rest_api_sigedi.Models
 
         public DbSet<Usuario> Usuarios {get; set;}
         public DbSet<Rol> Roles {get; set;}
+        public DbSet<Vendedor> Vendedores {get; set;}
     }
 }
