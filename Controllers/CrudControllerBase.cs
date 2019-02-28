@@ -65,7 +65,7 @@ namespace rest_api_sigedi.Controllers
         [HttpPost]
         public virtual async Task<IActionResult> Create(TDto dto)
         {
-            if (IsValidModel(dto))
+            if (await IsValidModel(dto))
             {
                 TEntity entity = _mapper.Map<TEntity>(dto);
                 await EntityDbSet.AddAsync(entity);
@@ -83,7 +83,7 @@ namespace rest_api_sigedi.Controllers
         {
             if (id != dto.Id || dto.Id == null) return BadRequest();
 
-            if (IsValidModel(dto))
+            if (await IsValidModel(dto))
             {
                 var entity = await EntityDbSet.FindAsync(id);
                 if (entity == null) return NotFound();
@@ -170,9 +170,9 @@ namespace rest_api_sigedi.Controllers
         }
 
         // sobreescribir este metodo si se desea realizar validaciones
-        protected virtual bool IsValidModel(TDto dto)
+        protected virtual async Task<bool> IsValidModel(TDto dto)
         {
-            return true;
+            return await new Task<bool>(() => true);
         }
 
     }
