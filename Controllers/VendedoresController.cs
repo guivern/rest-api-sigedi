@@ -36,6 +36,31 @@ namespace rest_api_sigedi.Controllers
             return CreatedAtAction("Detail", new { id = vendedor.Id }, vendedor);
         }
 
+        public override async Task<IActionResult> Update(long id, VendedorDto dto)
+        {
+            if (id != dto.Id || dto.Id == null) return BadRequest();
+
+            var vendedor = await _context.Vendedores.FindAsync(id);
+            if (vendedor == null) return NotFound();
+
+            if (await _context.Vendedores
+            .AnyAsync(v => v.NumeroDocumento == dto.NumeroDocumento && v.Id != id))
+            {
+                ModelState.AddModelError(
+                nameof(dto.NumeroDocumento),
+                $"Ya existe un vendedor con número de documento \"{dto.NumeroDocumento}\" en el sistema");
+                
+                return BadRequest(ModelState);
+            }
+            
+            vendedor = _mapper.Map<VendedorDto, Vendedor>(dto, vendedor);
+
+            _context.Entry(vendedor).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
     }
     public class VendedorDto : DtoBase
     {
