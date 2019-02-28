@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace rest_api_sigedi.Models
 {
-    public class PersonaEntityBase: EntityBase
+    public class PersonaEntityBase: SoftDeleteEntityBase
     {
         public static readonly string[] DOCUMENTOS = { "CEDULA", "RUC"};
 
