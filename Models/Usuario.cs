@@ -20,8 +20,6 @@ namespace rest_api_sigedi.Models
         public Rol Rol {get; set;}
         public long IdRol {get; set;}
 
-        public bool Activo {get; set;} = true;
-
         [NotMapped]
         public string NombreRol => Rol?.Nombre;
     }

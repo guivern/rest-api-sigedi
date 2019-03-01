@@ -1,4 +1,6 @@
 using AutoMapper;
+using rest_api_sigedi.Controllers;
+using rest_api_sigedi.Models;
 
 namespace rest_api_sigedi.Mappings
 {
@@ -16,6 +18,7 @@ namespace rest_api_sigedi.Mappings
                 CreateMap<CategoriaDto, Categoria>()
                 .ForMember(d => d.FechaCreacion, opt => opt.Ignore());
              */
+            CreateMap<VendedorDto, Vendedor>();
         }
     }
 }

@@ -38,7 +38,11 @@ namespace rest_api_sigedi.Controllers
                 query = query.Where(e => (e as SoftDeleteEntityBase).Activo);
             }
 
-            return Ok(await IncludeListFields(query).ToListAsync());
+            var result = await IncludeListFields(query)
+            .OrderByDescending(e => e.Id)
+            .ToListAsync(); 
+
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
@@ -61,32 +65,43 @@ namespace rest_api_sigedi.Controllers
         [HttpPost]
         public virtual async Task<IActionResult> Create(TDto dto)
         {
-            TEntity entity = _mapper.Map<TEntity>(dto);
-            await EntityDbSet.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            if (await IsValidModel(dto))
+            {
+                TEntity entity = _mapper.Map<TEntity>(dto);
+                await EntityDbSet.AddAsync(entity);
+                await _context.SaveChangesAsync();
 
-            return CreatedAtAction("Detail", new { id = entity.Id }, entity);
+                return CreatedAtAction("Detail", new { id = entity.Id }, entity);
+            }
+
+            return BadRequest(ModelState);
+
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(long id, TDto dto)
+        public virtual async Task<IActionResult> Update(long id, TDto dto)
         {
             if (id != dto.Id || dto.Id == null) return BadRequest();
 
-            var entity = await EntityDbSet.FindAsync(id);
-            if (entity == null) return NotFound();
-
-            entity = _mapper.Map<TDto, TEntity>(dto, entity);
-            
-            if (IsAuditEntity)
+            if (await IsValidModel(dto))
             {
-                (entity as AuditEntityBase).FechaUltimaModificacion = DateTime.Now;
+                var entity = await EntityDbSet.FindAsync(id);
+                if (entity == null) return NotFound();
+
+                entity = _mapper.Map<TDto, TEntity>(dto, entity);
+
+                if (IsAuditEntity)
+                {
+                    (entity as AuditEntityBase).FechaUltimaModificacion = DateTime.Now;
+                }
+
+                _context.Entry(entity).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
 
-            _context.Entry(entity).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return BadRequest(ModelState);
         }
 
         [HttpDelete("{id}")]
@@ -148,9 +163,16 @@ namespace rest_api_sigedi.Controllers
             return StatusCode(405);
         }
 
+        // sobreescribir este metodo si se desea agregar includes a los querys
         protected virtual IQueryable<TEntity> IncludeListFields(IQueryable<TEntity> query)
         {
             return query;
+        }
+
+        // sobreescribir este metodo si se desea realizar validaciones
+        protected virtual async Task<bool> IsValidModel(TDto dto)
+        {
+            return await new Task<bool>(() => true);
         }
 
     }
