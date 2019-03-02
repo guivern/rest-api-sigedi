@@ -19,6 +19,7 @@ namespace rest_api_sigedi.Mappings
                 .ForMember(d => d.FechaCreacion, opt => opt.Ignore());
              */
             CreateMap<VendedorDto, Vendedor>();
+            CreateMap<CategoriaDto, Categoria>();
         }
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using rest_api_sigedi.Models;
@@ -9,9 +10,10 @@ using rest_api_sigedi.Models;
 namespace RestApiSigedi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20190226203927_Categoria")]
+    partial class Categoria
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -114,40 +116,6 @@ namespace RestApiSigedi.Migrations
                     b.HasIndex("IdRol");
 
                     b.ToTable("Usuarios");
-                });
-
-            modelBuilder.Entity("rest_api_sigedi.Models.Vendedor", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("Activo");
-
-                    b.Property<string>("Apellido")
-                        .IsRequired();
-
-                    b.Property<string>("Descripcion");
-
-                    b.Property<string>("Direccion");
-
-                    b.Property<string>("Email");
-
-                    b.Property<DateTime?>("FechaNacimiento");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired();
-
-                    b.Property<string>("NumeroDocumento");
-
-                    b.Property<string>("Telefono");
-
-                    b.Property<string>("TipoDocumento");
-
-                    b.Property<string>("ZonaVenta");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Vendedores");
                 });
 
             modelBuilder.Entity("rest_api_sigedi.Models.Usuario", b =>
