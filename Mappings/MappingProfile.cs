@@ -20,6 +20,7 @@ namespace rest_api_sigedi.Mappings
              */
             CreateMap<VendedorDto, Vendedor>();
             CreateMap<CategoriaDto, Categoria>();
+            CreateMap<ProveedorDto, Proveedor>();
         }
     }
 }
