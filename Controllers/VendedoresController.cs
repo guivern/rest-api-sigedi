@@ -41,13 +41,13 @@ namespace rest_api_sigedi.Controllers
         public string Apellido { get; set; }
         public string Direccion { get; set; }
         public string Telefono { get; set; }
-        [Requerido]
         public string TipoDocumento { get; set; }
         [Requerido]
         public string NumeroDocumento { get; set; }
         public DateTime? FechaNacimiento { get; set; }
         [EmailAddress(ErrorMessage = "No es una dirección de correo válida")]
         public string Email { get; set; }
+        public string ZonaVenta {get; set;}
         public bool? Activo { get; set; } = true;
     }
 }
