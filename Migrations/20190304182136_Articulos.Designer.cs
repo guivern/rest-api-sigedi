@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using rest_api_sigedi.Models;
@@ -9,9 +10,10 @@ using rest_api_sigedi.Models;
 namespace RestApiSigedi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20190304182136_Articulos")]
+    partial class Articulos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -204,11 +206,7 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<string>("Email");
 
-                    b.Property<DateTime?>("FechaIngreso");
-
                     b.Property<DateTime?>("FechaNacimiento");
-
-                    b.Property<string>("Nacionalidad");
 
                     b.Property<string>("Nombre")
                         .IsRequired();
@@ -216,8 +214,6 @@ namespace RestApiSigedi.Migrations
                     b.Property<string>("NumeroDocumento");
 
                     b.Property<string>("Telefono");
-
-                    b.Property<string>("TelefonoMovil");
 
                     b.Property<string>("TipoDocumento");
 
