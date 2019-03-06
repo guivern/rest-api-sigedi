@@ -8,6 +8,7 @@ namespace rest_api_sigedi.Models
         [ForeignKey("IdArticulo")]
         [JsonIgnore]
         public Articulo Articulo {get; set;}
+        [JsonIgnore]
         public long IdArticulo {get; set;}
 
         public decimal PrecioVenta {get; set;}

@@ -16,6 +16,8 @@ namespace rest_api_sigedi.Models
         public Proveedor Proveedor {get; set;}
         public long IdProveedor {get; set;}
 
+        public long? Codigo {get; set;}
+
         [NotMapped]
         public ICollection<Precio> Precios {get; set;}
         [NotMapped]
