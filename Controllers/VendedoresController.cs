@@ -49,5 +49,10 @@ namespace rest_api_sigedi.Controllers
         public string Email { get; set; }
         public string ZonaVenta {get; set;}
         public bool? Activo { get; set; } = true;
+        //se agregan los campos nuevos 
+        public string Nacionalidad {get; set;}
+        public string TelefonoMovil {get; set;}
+        public DateTime? FechaIngreso {get; set;}
+        public string Descripcion {get; set;}
     }
 }
