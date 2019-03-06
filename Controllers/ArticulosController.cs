@@ -26,7 +26,17 @@ namespace rest_api_sigedi.Controllers
 
             var articulo = await IncludeListFields(query)
             .Include(a => a.Precios)
-            .SingleOrDefaultAsync(e => e.Id == id);
+            .Select(a => new
+            {
+                a.Id,
+                a.Codigo,
+                a.Descripcion,
+                a.IdCategoria,
+                a.IdProveedor,
+                a.Activo,
+                Precios = a.Precios.Where(p => p.Activo).OrderByDescending(p => p.Id)
+            })
+            .SingleOrDefaultAsync(a => a.Id == id);
 
             if (articulo == null)
                 return NotFound();
@@ -62,10 +72,66 @@ namespace rest_api_sigedi.Controllers
 
         }
 
+        public override async Task<IActionResult> Update(long id, ArticuloDto dto)
+        {
+            if (id != dto.Id || dto.Id == null) return BadRequest();
+            if (await IsValidModel(dto))
+            {
+                var articulo = await _context.Articulos.FindAsync(id);
+                if (articulo == null) return NotFound();
+
+                articulo = _mapper.Map<ArticuloDto, Articulo>(dto, articulo);
+                _context.Entry(articulo).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
+                //obtenemos los precios del articulo
+                var precios = await _context.Precios.Where(p => p.IdArticulo == id).ToListAsync();
+                
+                //verificamos si hay nuevos precios
+                foreach (var PrecioDto in dto.Precios)
+                {
+                    if (PrecioDto.Id == null)
+                    {
+                        _context.Precios.Add(new Precio
+                        {
+                            Descripcion = PrecioDto.Descripcion,
+                            PrecioVenta = (long)PrecioDto.PrecioVenta,
+                            PrecioRendVendedor = (long)PrecioDto.PrecioRendVendedor,
+                            PrecioRendAgencia = PrecioDto.PrecioRendAgencia,
+                            IdArticulo = (long)dto.Id
+                        });
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                //verificamos si hay precios para eliminar
+                foreach (var precio in precios)
+                {
+                    var seElimina = true;
+                    foreach (var precioDto in dto.Precios)
+                    {
+                        if (precio.Id == precioDto.Id)
+                        {
+                            seElimina = false;
+                        }
+                    }
+                    if (seElimina)
+                    {
+                        precio.Activo = false;
+                        _context.Precios.Update(precio);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                return NoContent();
+            }
+            return BadRequest(ModelState);
+        }
+
         protected override async Task<bool> IsValidModel(ArticuloDto dto)
         {
             if (await _context.Articulos
-            .AnyAsync(a => a.Descripcion.ToLower().Equals(dto.Descripcion.ToLower())))
+            .AnyAsync(a => a.Descripcion.ToLower().Equals(dto.Descripcion.ToLower()) && a.Id != dto.Id))
             {
                 ModelState.AddModelError(
                 nameof(dto.Descripcion),
@@ -98,7 +164,7 @@ namespace rest_api_sigedi.Controllers
         [Requerido]
         public long? IdProveedor { get; set; }
 
-        public List<PrecioDto> Precios { get; set; }
+        public List<PrecioDto> Precios { get; set; } = new List<PrecioDto>();
     }
 
     public class PrecioDto : DtoBase
