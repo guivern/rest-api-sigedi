@@ -23,6 +23,7 @@ namespace rest_api_sigedi.Mappings
             CreateMap<ProveedorDto, Proveedor>();
             CreateMap<ArticuloDto, Articulo>()
             .ForMember(a => a.Precios, opt => opt.Ignore());
+            CreateMap<PrecioDto, Precio>();
         }
     }
 }
