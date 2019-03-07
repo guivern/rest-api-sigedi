@@ -48,28 +48,20 @@ namespace rest_api_sigedi.Controllers
         {
             if (await IsValidModel(dto))
             {
+                // obtenemos el articulo luego de mapear y guardamos
                 Articulo articulo = _mapper.Map<Articulo>(dto);
                 await EntityDbSet.AddAsync(articulo);
                 await _context.SaveChangesAsync();
 
-                foreach (var precioDto in dto.Precios)
-                {
-                    Precio precio = new Precio
-                    {
-                        IdArticulo = articulo.Id,
-                        Descripcion = precioDto.Descripcion,
-                        PrecioVenta = (decimal)precioDto.PrecioVenta,
-                        PrecioRendVendedor = (decimal)precioDto.PrecioRendVendedor,
-                        PrecioRendAgencia = precioDto.PrecioRendAgencia,
-                    };
-                    _context.Precios.Add(precio);
-                }
-
+                // obtenemos los precios luego de mapear y guardamos
+                IEnumerable<Precio> precios = _mapper.Map<IEnumerable<Precio>>(dto.Precios);
+                foreach (var precio in precios) { precio.IdArticulo = articulo.Id; }
+                _context.Precios.AddRange(precios);
                 await _context.SaveChangesAsync();
+
                 return CreatedAtAction("Detail", new { id = articulo.Id }, articulo);
             }
             return BadRequest(ModelState);
-
         }
 
         public override async Task<IActionResult> Update(long id, ArticuloDto dto)
@@ -80,32 +72,31 @@ namespace rest_api_sigedi.Controllers
                 var articulo = await _context.Articulos.FindAsync(id);
                 if (articulo == null) return NotFound();
 
+                // obtenemos los datos actualizados del articulo y guardamos 
                 articulo = _mapper.Map<ArticuloDto, Articulo>(dto, articulo);
                 _context.Entry(articulo).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
-                //obtenemos los precios del articulo
-                var precios = await _context.Precios.Where(p => p.IdArticulo == id).ToListAsync();
-                
-                //verificamos si hay nuevos precios
-                foreach (var PrecioDto in dto.Precios)
+                //obtenemos los precios para luego comparar cuales se agregan y eliminan
+                var preciosDb = await _context.Precios.Where(p => p.IdArticulo == id).ToListAsync();
+
+                // agregamos nuevos precios
+                foreach (var precioDto in dto.Precios)
                 {
-                    if (PrecioDto.Id == null)
-                    {
-                        _context.Precios.Add(new Precio
+                    if (precioDto.Id == null)
+                    {   // es nuevo
+                        Precio precio = _mapper.Map<PrecioDto, Precio>(precioDto, opt =>
                         {
-                            Descripcion = PrecioDto.Descripcion,
-                            PrecioVenta = (long)PrecioDto.PrecioVenta,
-                            PrecioRendVendedor = (long)PrecioDto.PrecioRendVendedor,
-                            PrecioRendAgencia = PrecioDto.PrecioRendAgencia,
-                            IdArticulo = (long)dto.Id
+                            opt.AfterMap((src, dest) => dest.IdArticulo = articulo.Id);
                         });
+
+                        _context.Precios.Add(precio);
                         await _context.SaveChangesAsync();
                     }
                 }
 
-                //verificamos si hay precios para eliminar
-                foreach (var precio in precios)
+                // eliminamos viejos precios
+                foreach (var precio in preciosDb)
                 {
                     var seElimina = true;
                     foreach (var precioDto in dto.Precios)
