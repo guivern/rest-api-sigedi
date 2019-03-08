@@ -39,6 +39,12 @@ namespace rest_api_sigedi.Models
             .HasOne(u => u.Rol)
             .WithMany()
             .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Precio>()
+            .HasOne(p => p.Articulo)
+            .WithMany(a => a.Precios)
+            .HasForeignKey(p => p.IdArticulo)
+            .OnDelete(DeleteBehavior.Restrict);
         }
 
         public DbSet<Usuario> Usuarios {get; set;}
@@ -46,5 +52,7 @@ namespace rest_api_sigedi.Models
         public DbSet<Vendedor> Vendedores {get; set;}
         public DbSet<Categoria> Categorias {get; set;}
         public DbSet<Proveedor> Proveedores {get; set;}
+        public DbSet<Articulo> Articulos {get; set;}
+        public DbSet<Precio> Precios {get; set;}
     }
 }
