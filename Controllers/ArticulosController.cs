@@ -150,10 +150,7 @@ namespace rest_api_sigedi.Controllers
     {
         [Requerido]
         public string Descripcion { get; set; }
-<<<<<<< HEAD
         public string Codigo {get; set;}
-=======
->>>>>>> 7d98411806dd3af071608b4b6b03582f5a99d459
         [Requerido]
         public long? IdCategoria { get; set; }
         [Requerido]
@@ -164,7 +161,6 @@ namespace rest_api_sigedi.Controllers
 
     public class PrecioDto : DtoBase
     {
-<<<<<<< HEAD
         [Requerido]
         public string Descripcion { get; set; }
         [Requerido]
@@ -172,12 +168,6 @@ namespace rest_api_sigedi.Controllers
         public decimal? PrecioVenta { get; set; }
         [Requerido]
         [NoNegativo]
-=======
-        public string Descripcion { get; set; }
-        [Requerido]
-        public decimal? PrecioVenta { get; set; }
-        [Requerido]
->>>>>>> 7d98411806dd3af071608b4b6b03582f5a99d459
         public decimal? PrecioRendVendedor { get; set; }
         public decimal? PrecioRendAgencia { get; set; }
     }
