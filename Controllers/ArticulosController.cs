@@ -129,6 +129,14 @@ namespace rest_api_sigedi.Controllers
                 $"Ya existe un artículo con nombre \"{dto.Descripcion}\" en el sistema");
                 return false;
             }
+            if (await _context.Articulos
+            .AnyAsync(a => a.Codigo == dto.Codigo && a.Id != dto.Id))
+            {
+                ModelState.AddModelError(
+                nameof(dto.Codigo),
+                $"Ya existe un artículo con código \"{dto.Codigo}\" en el sistema");
+                return false;   
+            }
             if (dto.Precios.Count == 0)
             {
                 ModelState.AddModelError(
@@ -150,7 +158,7 @@ namespace rest_api_sigedi.Controllers
     {
         [Requerido]
         public string Descripcion { get; set; }
-        public string Codigo {get; set;}
+        public long? Codigo {get; set;}
         [Requerido]
         public long? IdCategoria { get; set; }
         [Requerido]
