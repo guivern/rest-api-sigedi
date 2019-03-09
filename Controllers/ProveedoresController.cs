@@ -51,5 +51,10 @@ namespace rest_api_sigedi.Controllers
         [EmailAddress(ErrorMessage = "No es una dirección de correo válida")]
         public string Email { get; set; }
         public bool? Activo { get; set; } = true;
+        public string DireccionWeb {get; set;}
+        public string Contacto {get; set;}
+        public string NumeroContacto {get; set;}
+        public string Ciudad {get; set;}
+        public string Barrio {get; set;}
     }
 }
