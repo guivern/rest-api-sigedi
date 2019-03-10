@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using rest_api_sigedi.Models;
@@ -9,39 +10,16 @@ using rest_api_sigedi.Models;
 namespace RestApiSigedi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20190307220853_NuevosCamposProveedores")]
+    partial class NuevosCamposProveedores
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
                 .HasAnnotation("ProductVersion", "2.2.2-servicing-10034")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
-
-            modelBuilder.Entity("rest_api_sigedi.Models.Articulo", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("Activo");
-
-                    b.Property<long?>("Codigo");
-
-                    b.Property<string>("Descripcion");
-
-                    b.Property<long>("IdCategoria");
-
-                    b.Property<long>("IdProveedor");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdCategoria");
-
-                    b.HasIndex("IdProveedor");
-
-                    b.ToTable("Articulos");
-                });
 
             modelBuilder.Entity("rest_api_sigedi.Models.Categoria", b =>
                 {
@@ -57,40 +35,12 @@ namespace RestApiSigedi.Migrations
                     b.ToTable("Categorias");
                 });
 
-            modelBuilder.Entity("rest_api_sigedi.Models.Precio", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("Activo");
-
-                    b.Property<string>("Descripcion");
-
-                    b.Property<long>("IdArticulo");
-
-                    b.Property<decimal?>("PrecioRendAgencia");
-
-                    b.Property<decimal>("PrecioRendVendedor");
-
-                    b.Property<decimal>("PrecioVenta");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdArticulo");
-
-                    b.ToTable("Precios");
-                });
-
             modelBuilder.Entity("rest_api_sigedi.Models.Proveedor", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<bool>("Activo");
-
-                    b.Property<string>("Barrio");
-
-                    b.Property<string>("Ciudad");
 
                     b.Property<string>("Contacto");
 
@@ -216,11 +166,7 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<string>("Email");
 
-                    b.Property<DateTime?>("FechaIngreso");
-
                     b.Property<DateTime?>("FechaNacimiento");
-
-                    b.Property<string>("Nacionalidad");
 
                     b.Property<string>("Nombre")
                         .IsRequired();
@@ -229,8 +175,6 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<string>("Telefono");
 
-                    b.Property<string>("TelefonoMovil");
-
                     b.Property<string>("TipoDocumento");
 
                     b.Property<string>("ZonaVenta");
@@ -238,27 +182,6 @@ namespace RestApiSigedi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Vendedores");
-                });
-
-            modelBuilder.Entity("rest_api_sigedi.Models.Articulo", b =>
-                {
-                    b.HasOne("rest_api_sigedi.Models.Categoria", "Categoria")
-                        .WithMany()
-                        .HasForeignKey("IdCategoria")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("rest_api_sigedi.Models.Proveedor", "Proveedor")
-                        .WithMany()
-                        .HasForeignKey("IdProveedor")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("rest_api_sigedi.Models.Precio", b =>
-                {
-                    b.HasOne("rest_api_sigedi.Models.Articulo", "Articulo")
-                        .WithMany("Precios")
-                        .HasForeignKey("IdArticulo")
-                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("rest_api_sigedi.Models.Usuario", b =>
