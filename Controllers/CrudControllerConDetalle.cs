@@ -47,6 +47,7 @@ namespace rest_api_sigedi.Controllers
 
                 EntityDetalleDbSet.AddRange(detalles);
                 await _context.SaveChangesAsync();
+                await ExecutePostSave(dto);
 
                 return CreatedAtAction("Detail", new { id = entity.Id }, entity);
             }
@@ -105,10 +106,14 @@ namespace rest_api_sigedi.Controllers
                         await _context.SaveChangesAsync();
                     }
                 }
-
+                await ExecutePostSave(dto);
                 return NoContent();
             }
             return BadRequest(ModelState);
         }
+
+        // sobreescribir si se desea realizar algo con los detalles luego de guardar
+        protected async virtual Task ExecutePostSave(TDto dto)
+        {}
     }
 }
