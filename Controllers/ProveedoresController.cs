@@ -12,7 +12,7 @@ namespace rest_api_sigedi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProveedoresController : CrudControllerBase<Proveedor, ProveedorDto>
+    public class ProveedoresController : CrudControllerSinDetalle<Proveedor, ProveedorDto>
     {
         public ProveedoresController(DataContext context, IMapper mapper) : base(context, mapper)
         { }

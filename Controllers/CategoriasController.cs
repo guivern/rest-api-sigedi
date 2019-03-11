@@ -9,7 +9,7 @@ namespace rest_api_sigedi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CategoriasController : CrudControllerBase<Categoria, CategoriaDto>
+    public class CategoriasController : CrudControllerSinDetalle<Categoria, CategoriaDto>
     {
         public CategoriasController(DataContext context, IMapper mapper) 
         : base(context, mapper)
