@@ -9,7 +9,7 @@ using rest_api_sigedi.Models;
 
 namespace rest_api_sigedi.Controllers
 {
-    public class CrudControllerBase<TEntity, TDto> : ControllerBase where TEntity : EntityBase, new() where TDto : DtoBase
+    public abstract class CrudControllerBase<TEntity, TDto> : ControllerBase where TEntity : EntityBase, new() where TDto : DtoBase
     {
         protected readonly DataContext _context;
         protected readonly IMapper _mapper;
@@ -54,54 +54,12 @@ namespace rest_api_sigedi.Controllers
                 query = query.Where(e => (e as SoftDeleteEntityBase).Activo);
             }
 
-            var entidad = await IncludeListFields(query).SingleOrDefaultAsync(e => e.Id == id);
+            var entidad = await IncludeDetailFields(IncludeListFields(query)).SingleOrDefaultAsync(e => (e as EntityBase).Id == id);
 
             if (entidad == null)
                 return NotFound();
 
             return Ok(entidad);
-        }
-
-        [HttpPost]
-        public virtual async Task<IActionResult> Create(TDto dto)
-        {
-            if (await IsValidModel(dto))
-            {
-                TEntity entity = _mapper.Map<TEntity>(dto);
-                await EntityDbSet.AddAsync(entity);
-                await _context.SaveChangesAsync();
-
-                return CreatedAtAction("Detail", new { id = entity.Id }, entity);
-            }
-
-            return BadRequest(ModelState);
-
-        }
-
-        [HttpPut("{id}")]
-        public virtual async Task<IActionResult> Update(long id, TDto dto)
-        {
-            if (id != dto.Id || dto.Id == null) return BadRequest();
-
-            if (await IsValidModel(dto))
-            {
-                var entity = await EntityDbSet.FindAsync(id);
-                if (entity == null) return NotFound();
-
-                entity = _mapper.Map<TDto, TEntity>(dto, entity);
-
-                if (IsAuditEntity)
-                {
-                    (entity as AuditEntityBase).FechaUltimaModificacion = DateTime.Now;
-                }
-
-                _context.Entry(entity).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-
-                return NoContent();
-            }
-
-            return BadRequest(ModelState);
         }
 
         [HttpDelete("{id}")]
@@ -163,8 +121,13 @@ namespace rest_api_sigedi.Controllers
             return StatusCode(405);
         }
 
-        // sobreescribir este metodo si se desea agregar includes a los querys
+        // sobreescribir este metodo si se desea incluir datos relacionales
         protected virtual IQueryable<TEntity> IncludeListFields(IQueryable<TEntity> query)
+        {
+            return query;
+        }
+
+        protected virtual IQueryable<TEntity> IncludeDetailFields(IQueryable<TEntity> query)
         {
             return query;
         }
