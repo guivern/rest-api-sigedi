@@ -53,7 +53,7 @@ namespace rest_api_sigedi.Controllers
 
         protected override IQueryable<Articulo> IncludeDetailFields(IQueryable<Articulo> query)
         {
-            return query.Include(a => a.Detalle);
+            return query.Include(a => a.Detalle).OrderByDescending(a => a.Id);
         }
 
     }
