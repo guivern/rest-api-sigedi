@@ -19,7 +19,7 @@ namespace rest_api_sigedi.Models
         public long? Codigo {get; set;}
 
         [NotMapped]
-        public ICollection<Precio> Precios {get; set;}
+        public ICollection<Precio> Detalle {get; set;}
         [NotMapped]
         public string NombreCategoria => Categoria?.Descripcion;
         [NotMapped]

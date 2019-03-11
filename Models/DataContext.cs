@@ -42,7 +42,7 @@ namespace rest_api_sigedi.Models
 
             modelBuilder.Entity<Precio>()
             .HasOne(p => p.Articulo)
-            .WithMany(a => a.Precios)
+            .WithMany(a => a.Detalle)
             .HasForeignKey(p => p.IdArticulo)
             .OnDelete(DeleteBehavior.Restrict);
         }
