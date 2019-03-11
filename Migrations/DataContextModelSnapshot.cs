@@ -19,30 +19,6 @@ namespace RestApiSigedi.Migrations
                 .HasAnnotation("ProductVersion", "2.2.2-servicing-10034")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            modelBuilder.Entity("rest_api_sigedi.Models.Articulo", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("Activo");
-
-                    b.Property<long?>("Codigo");
-
-                    b.Property<string>("Descripcion");
-
-                    b.Property<long>("IdCategoria");
-
-                    b.Property<long>("IdProveedor");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdCategoria");
-
-                    b.HasIndex("IdProveedor");
-
-                    b.ToTable("Articulos");
-                });
-
             modelBuilder.Entity("rest_api_sigedi.Models.Categoria", b =>
                 {
                     b.Property<long>("Id")
@@ -55,30 +31,6 @@ namespace RestApiSigedi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categorias");
-                });
-
-            modelBuilder.Entity("rest_api_sigedi.Models.Precio", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("Activo");
-
-                    b.Property<string>("Descripcion");
-
-                    b.Property<long>("IdArticulo");
-
-                    b.Property<decimal?>("PrecioRendAgencia");
-
-                    b.Property<decimal>("PrecioRendVendedor");
-
-                    b.Property<decimal>("PrecioVenta");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdArticulo");
-
-                    b.ToTable("Precios");
                 });
 
             modelBuilder.Entity("rest_api_sigedi.Models.Proveedor", b =>
@@ -216,11 +168,7 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<string>("Email");
 
-                    b.Property<DateTime?>("FechaIngreso");
-
                     b.Property<DateTime?>("FechaNacimiento");
-
-                    b.Property<string>("Nacionalidad");
 
                     b.Property<string>("Nombre")
                         .IsRequired();
@@ -229,8 +177,6 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<string>("Telefono");
 
-                    b.Property<string>("TelefonoMovil");
-
                     b.Property<string>("TipoDocumento");
 
                     b.Property<string>("ZonaVenta");
@@ -238,27 +184,6 @@ namespace RestApiSigedi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Vendedores");
-                });
-
-            modelBuilder.Entity("rest_api_sigedi.Models.Articulo", b =>
-                {
-                    b.HasOne("rest_api_sigedi.Models.Categoria", "Categoria")
-                        .WithMany()
-                        .HasForeignKey("IdCategoria")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("rest_api_sigedi.Models.Proveedor", "Proveedor")
-                        .WithMany()
-                        .HasForeignKey("IdProveedor")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("rest_api_sigedi.Models.Precio", b =>
-                {
-                    b.HasOne("rest_api_sigedi.Models.Articulo", "Articulo")
-                        .WithMany("Precios")
-                        .HasForeignKey("IdArticulo")
-                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("rest_api_sigedi.Models.Usuario", b =>
