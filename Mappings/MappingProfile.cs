@@ -24,6 +24,9 @@ namespace rest_api_sigedi.Mappings
             CreateMap<ArticuloDto, Articulo>()
             .ForMember(a => a.Detalle, opt => opt.Ignore());
             CreateMap<PrecioDto, Precio>();
+            CreateMap<IngresoDto, Ingreso>()
+            .ForMember(i => i.Detalle, opt => opt.Ignore());
+            CreateMap<IngresoDetalleDto, IngresoDetalle>();
         }
     }
 }

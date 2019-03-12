@@ -45,6 +45,12 @@ namespace rest_api_sigedi.Models
             .WithMany(a => a.Detalle)
             .HasForeignKey(p => p.IdArticulo)
             .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<IngresoDetalle>()
+            .HasOne(p => p.Ingreso)
+            .WithMany(a => a.Detalle)
+            .HasForeignKey(p => p.IdIngreso)
+            .OnDelete(DeleteBehavior.Restrict);
         }
 
         public DbSet<Usuario> Usuarios {get; set;}
@@ -54,5 +60,8 @@ namespace rest_api_sigedi.Models
         public DbSet<Proveedor> Proveedores {get; set;}
         public DbSet<Articulo> Articulos {get; set;}
         public DbSet<Precio> Precios {get; set;}
+        public DbSet<Ingreso> Ingresos {get; set;}
+        public DbSet<IngresoDetalle> IngresoDetalles {get; set;}
+        public DbSet<Edicion> Ediciones {get; set;}
     }
 }
