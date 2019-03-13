@@ -135,7 +135,7 @@ namespace rest_api_sigedi.Controllers
         // sobreescribir este metodo si se desea realizar validaciones
         protected virtual async Task<bool> IsValidModel(TDto dto)
         {
-            return await new Task<bool>(() => true);
+            return ModelState.IsValid;
         }
 
     }

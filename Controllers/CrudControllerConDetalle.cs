@@ -40,6 +40,8 @@ namespace rest_api_sigedi.Controllers
                         var idPadre = property.GetCustomAttributes(typeof(IdPadre), false);
                         if (idPadre.Length > 0)
                         {
+                            /* TODO: Agregar un break cuando se encuentre el Id padre 
+                            o usar un while en lugar del for*/
                             property.SetValue(detalle, entity.Id);
                         }
                     }
@@ -61,6 +63,8 @@ namespace rest_api_sigedi.Controllers
             {
                 var entity = await EntityDbSet.FindAsync(id);
                 if (entity == null) return NotFound();
+
+                //TODO: Setear la fecha de modificacion
 
                 // obtenemos los datos actualizados de la cabecera y guardamos 
                 entity = _mapper.Map<TDto, TEntity>(dto, entity);
