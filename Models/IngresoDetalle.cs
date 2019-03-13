@@ -31,11 +31,11 @@ namespace rest_api_sigedi.Models
         public String NroEdicion {get; set;}
 
         [NotMapped]
-        public String NombreArticulo => Articulo.Descripcion;
+        public String NombreArticulo => Articulo?.Descripcion;
 
         [NotMapped]
-        public Decimal PrecioVenta => Precio.PrecioVenta; 
+        public Decimal? PrecioVenta => Precio?.PrecioVenta; 
         [NotMapped]
-        public Decimal PrecioRendicion => Precio.PrecioRendVendedor; 
+        public Decimal? PrecioRendicion => Precio?.PrecioRendVendedor; 
     }
 }

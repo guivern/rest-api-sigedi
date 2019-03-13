@@ -15,7 +15,16 @@ namespace rest_api_sigedi.Controllers
     {
         public IngresosController(DataContext context, IMapper mapper) : base(context, mapper)
         { }
-
+        protected override async Task<bool> IsValidModel(IngresoDto dto)
+        {
+            if (dto.Detalle.Count == 0)
+            {
+                ModelState.AddModelError(
+                nameof(dto.Detalle), "Debe ingresar al menos un detalle de ingreso");
+                return false;
+            }
+            return true;
+        }
         protected override IQueryable<Ingreso> IncludeListFields(IQueryable<Ingreso> query)
         {
             return query
@@ -37,20 +46,25 @@ namespace rest_api_sigedi.Controllers
         [Requerido]
         public long? IdProveedor { get; set; }
         [Requerido]
-        public long? IdUsuario { get; set; }
+        public long? IdUsuarioCreador { get; set; }
         public string TipoComprobante { get; set; }
-        public string NroComprobante { get; set; }
+        public string NumeroComprobante { get; set; }
     }
 
     public class IngresoDetalleDto : DtoBase
     {
         [Requerido]
+        public long? IdArticulo {get; set;}
+        [Requerido]
+        public long? IdPrecio {get; set;}
+        [Requerido]
         [NoNegativo]
         public long Cantidad { get; set; }
         [Requerido]
-        public DateTime FechaEdicion { get; set; }
+        public DateTime? FechaEdicion { get; set; }
         [Requerido]
         public String NroEdicion { get; set; }
+        
     }
 
 }
