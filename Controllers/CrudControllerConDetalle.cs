@@ -65,10 +65,12 @@ namespace rest_api_sigedi.Controllers
                 var entity = await EntityDbSet.FindAsync(id);
                 if (entity == null) return NotFound();
 
-                //TODO: Setear la fecha de modificacion
-
                 // obtenemos los datos actualizados de la cabecera y guardamos 
                 entity = _mapper.Map<TDto, TEntity>(dto, entity);
+                if (IsAuditEntity)
+                {
+                    (entity as AuditEntityBase).FechaUltimaModificacion = DateTime.Now;
+                }
                 _context.Entry(entity).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
@@ -99,12 +101,7 @@ namespace rest_api_sigedi.Controllers
                     if (detalleDto.Id != null)
                     {
                         TEntityDetalle detalle = await EntityDetalleDbSet.FindAsync(detalleDto.Id);
-                        detalle = _mapper.Map<TDtoDetalle,TEntityDetalle>(detalleDto, detalle);
-
-                        if (IsAuditEntity)
-                        {
-                            (detalle as AuditEntityBase).FechaUltimaModificacion = DateTime.Now;
-                        }
+                        detalle = _mapper.Map<TDtoDetalle, TEntityDetalle>(detalleDto, detalle);
 
                         _context.Entry(detalle).State = EntityState.Modified;
                         await _context.SaveChangesAsync();
@@ -118,6 +115,6 @@ namespace rest_api_sigedi.Controllers
 
         // sobreescribir si se desea realizar algo con los detalles luego de guardar
         protected async virtual Task ExecutePostSave(TDto dto)
-        {}
+        { }
     }
 }
