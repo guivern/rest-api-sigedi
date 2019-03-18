@@ -28,7 +28,7 @@ namespace rest_api_sigedi.Models
         //campos propios
         public long Cantidad {get; set;}
         public DateTime? FechaEdicion {get; set;}
-        public String NroEdicion {get; set;}
+        public long NroEdicion {get; set;}
 
         [NotMapped]
         public String NombreArticulo => Articulo?.Descripcion;
