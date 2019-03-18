@@ -56,6 +56,37 @@ namespace rest_api_sigedi.Controllers
             return query.Include(a => a.Detalle).OrderByDescending(a => a.Id);
         }
 
+        // retorna articulos de un proveedor especifico
+        [HttpGet("proveedor/{id}")]
+        public async Task<IActionResult> GetByProveedor(long id)
+        {
+            var articulos = await _context.Articulos
+            .Where(a => a.IdProveedor == id && a.Activo)
+            .Include(a => a.Categoria)
+            .Select(a => new{
+                a.Id,
+                a.Descripcion
+            })
+            .ToListAsync();
+
+            if(articulos == null) return NotFound();
+
+            return Ok(articulos);
+        }
+
+        // retorna los precios de un articulo
+        [HttpGet("{id}/precios")]
+        public async Task<IActionResult> GetPrecios(long id)
+        {
+            var precios = await _context.Precios
+            .Where(p => p.IdArticulo == id && p.Activo)
+            .ToListAsync();
+
+            if(precios == null) return NotFound();
+
+            return Ok(precios);
+        }
+
     }
 
     public class ArticuloDto : DtoConDetalle<PrecioDto>
