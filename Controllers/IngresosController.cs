@@ -63,7 +63,7 @@ namespace rest_api_sigedi.Controllers
         [Requerido]
         public DateTime? FechaEdicion { get; set; }
         [Requerido]
-        public String NroEdicion { get; set; }
+        public long? NroEdicion { get; set; }
         
     }
 

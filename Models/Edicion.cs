@@ -19,7 +19,7 @@ namespace rest_api_sigedi.Models
 
         //campos propios
         public DateTime? FechaEdicion {get; set;}
-        public String NroEdicion {get; set;}
+        public long NroEdicion {get; set;}
         public long CantidadInicial {get; set;}
         public long CantidadActual {get; set;}
     }
