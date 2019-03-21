@@ -1,6 +1,10 @@
 using System;
+using System.Linq;
+using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using rest_api_sigedi.Annotations;
 using rest_api_sigedi.Models;
 
 namespace rest_api_sigedi.Controllers
@@ -13,8 +17,13 @@ namespace rest_api_sigedi.Controllers
         : base(context, mapper)
         {}
 
+        protected override IQueryable<Edicion> IncludeListFields(IQueryable<Edicion> query)
+        {
+            return query
+            .Include(e => e.Articulo)
+            .Include(e => e.Precio);
+        }
     }
-
 
     public class EdicionDto : DtoBase
     {
