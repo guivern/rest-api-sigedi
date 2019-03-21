@@ -39,6 +39,31 @@ namespace rest_api_sigedi.Controllers
                 .Include(a => a.Detalle)
                     .ThenInclude(d => d.Precio);
         }
+
+        protected override async Task ExecutePostSave(IngresoDto dto)
+        { 
+            var ediciones = await _context.Ediciones.ToListAsync();
+            // verificar si existe un nro edicion y fecha 
+            foreach (var detalleDto in dto.Detalle)
+            {
+                if ((ediciones.Any(e => e.NroEdicion == detalleDto.NroEdicion)) &&
+                ediciones.Any(e => e.FechaEdicion == detalleDto.FechaEdicion))
+                {
+                    // ya existe, actualizamos
+                    Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleDto.NroEdicion);
+                    edicion.CantidadInicial += detalleDto.Cantidad;
+                    edicion.CantidadActual += detalleDto.Cantidad;
+                    _context.Ediciones.Update(edicion);
+                    await _context.SaveChangesAsync();
+                }
+                else{
+                    // creamos
+                    Edicion edicion = _mapper.Map<Edicion>(detalleDto);
+                    await _context.Ediciones.AddAsync(edicion);
+                    await _context.SaveChangesAsync();
+                }
+            } 
+        }
     }
 
     public class IngresoDto : DtoConDetalle<IngresoDetalleDto>

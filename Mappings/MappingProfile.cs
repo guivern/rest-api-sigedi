@@ -27,6 +27,10 @@ namespace rest_api_sigedi.Mappings
             CreateMap<IngresoDto, Ingreso>()
             .ForMember(i => i.Detalle, opt => opt.Ignore());
             CreateMap<IngresoDetalleDto, IngresoDetalle>();
+            CreateMap<IngresoDetalleDto, Edicion>()
+            .ForMember(d => d.CantidadInicial, opt => opt.MapFrom(src => src.Cantidad))
+            .ForMember(d => d.CantidadActual, opt => opt.MapFrom(src => src.Cantidad));
+                
         }
     }
 }
