@@ -99,7 +99,7 @@ namespace rest_api_sigedi.Controllers
         }
 
         [HttpPut("[action]/{id}")]
-        public async Task<IActionResult> Desactivar(long id)
+        public virtual async Task<IActionResult> Desactivar(long id)
         {
             if (IsSoftDelete)
             {

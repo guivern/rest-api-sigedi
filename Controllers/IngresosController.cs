@@ -46,11 +46,13 @@ namespace rest_api_sigedi.Controllers
             // verificar si existe un nro edicion y fecha 
             foreach (var detalleDto in dto.Detalle)
             {
-                if ((ediciones.Any(e => e.NroEdicion == detalleDto.NroEdicion)) &&
+                if (ediciones.Any(e => e.NroEdicion == detalleDto.NroEdicion) &&
                 ediciones.Any(e => e.FechaEdicion == detalleDto.FechaEdicion))
                 {
                     // ya existe, actualizamos
-                    Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleDto.NroEdicion);
+                    Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleDto.NroEdicion 
+                    && e.FechaEdicion == detalleDto.FechaEdicion );
+                    
                     edicion.CantidadInicial += detalleDto.Cantidad;
                     edicion.CantidadActual += detalleDto.Cantidad;
                     _context.Ediciones.Update(edicion);
@@ -64,6 +66,64 @@ namespace rest_api_sigedi.Controllers
                 }
             } 
         }
+      
+       [HttpPut("[action]/{id}")]
+        public override async Task<IActionResult> Desactivar(long id)
+        {
+            if (IsSoftDelete)
+            {
+                var ingreso = await _context.Ingresos.FindAsync(id);
+
+                var ingresoDetalle = await _context.IngresoDetalles.Where(a => a.IdIngreso == id).ToListAsync();
+                
+                if (ingreso == null) 
+                {
+                    return NotFound();
+                }
+                else{
+                    //listamos las ediciones
+                    var ediciones = await _context.Ediciones.ToListAsync();
+
+                    //recorremos el detalle
+                    foreach (var detalleIngreso in ingresoDetalle)
+                    {
+                        if (ediciones.Any(e => e.NroEdicion == detalleIngreso.NroEdicion) &&
+                        ediciones.Any(e => e.FechaEdicion == detalleIngreso.FechaEdicion) &&
+                        ediciones.Any(e => e.CantidadInicial <= detalleIngreso.Cantidad))
+                        {
+                            Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleIngreso.NroEdicion 
+                            && e.FechaEdicion == detalleIngreso.FechaEdicion );
+                            _context.Remove(edicion);
+                            await _context.SaveChangesAsync();
+                           
+                        }
+                        else{
+                            
+                            //actualizamos
+                            Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleIngreso.NroEdicion 
+                            && e.FechaEdicion == detalleIngreso.FechaEdicion );
+
+                            edicion.CantidadInicial -= detalleIngreso.Cantidad;
+                            edicion.CantidadActual -= detalleIngreso.Cantidad;
+                            _context.Ediciones.Update(edicion);
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+                    ingreso.Activo = false;
+                }
+                if (IsAuditEntity)
+                {
+                    ingreso.FechaUltimaModificacion = DateTime.Now;
+                }
+
+                _context.Entry(ingreso).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+            return StatusCode(405);
+        }
+        
+       
     }
 
     public class IngresoDto : DtoConDetalle<IngresoDetalleDto>
