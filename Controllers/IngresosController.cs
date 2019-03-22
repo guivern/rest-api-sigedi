@@ -42,10 +42,11 @@ namespace rest_api_sigedi.Controllers
 
         protected override async Task ExecutePostSave(IngresoDto dto)
         { 
-            var ediciones = await _context.Ediciones.ToListAsync();
             // verificar si existe un nro edicion y fecha 
             foreach (var detalleDto in dto.Detalle)
             {
+                var ediciones = await _context.Ediciones.ToListAsync();
+
                 if (ediciones.Any(e => e.NroEdicion == detalleDto.NroEdicion) &&
                 ediciones.Any(e => e.FechaEdicion == detalleDto.FechaEdicion) &&
                 ediciones.Any(e => e.IdArticulo == detalleDto.IdArticulo))
@@ -83,12 +84,13 @@ namespace rest_api_sigedi.Controllers
                     return NotFound();
                 }
                 else{
-                    //listamos las ediciones
-                    var ediciones = await _context.Ediciones.ToListAsync();
-
                     //recorremos el detalle
                     foreach (var detalleIngreso in ingresoDetalle)
                     {
+                        //listamos las ediciones
+                        var ediciones = await _context.Ediciones.ToListAsync();
+
+
                         if (ediciones.Any(e => e.NroEdicion == detalleIngreso.NroEdicion) &&
                         ediciones.Any(e => e.FechaEdicion == detalleIngreso.FechaEdicion) &&
                         ediciones.Any(e => e.CantidadInicial <= detalleIngreso.Cantidad) &&
@@ -97,7 +99,7 @@ namespace rest_api_sigedi.Controllers
                             Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleIngreso.NroEdicion 
                             && e.FechaEdicion == detalleIngreso.FechaEdicion
                             && e.IdArticulo == detalleIngreso.IdArticulo);
-                            _context.Remove(edicion);
+                            _context.Ediciones.Remove(edicion);
                             await _context.SaveChangesAsync();
                            
                         }
