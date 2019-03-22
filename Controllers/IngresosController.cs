@@ -47,11 +47,13 @@ namespace rest_api_sigedi.Controllers
             foreach (var detalleDto in dto.Detalle)
             {
                 if (ediciones.Any(e => e.NroEdicion == detalleDto.NroEdicion) &&
-                ediciones.Any(e => e.FechaEdicion == detalleDto.FechaEdicion))
+                ediciones.Any(e => e.FechaEdicion == detalleDto.FechaEdicion) &&
+                ediciones.Any(e => e.IdArticulo == detalleDto.IdArticulo))
                 {
                     // ya existe, actualizamos
                     Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleDto.NroEdicion 
-                    && e.FechaEdicion == detalleDto.FechaEdicion );
+                    && e.FechaEdicion == detalleDto.FechaEdicion
+                    && e.IdArticulo == detalleDto.IdArticulo);
                     
                     edicion.CantidadInicial += detalleDto.Cantidad;
                     edicion.CantidadActual += detalleDto.Cantidad;
@@ -89,10 +91,12 @@ namespace rest_api_sigedi.Controllers
                     {
                         if (ediciones.Any(e => e.NroEdicion == detalleIngreso.NroEdicion) &&
                         ediciones.Any(e => e.FechaEdicion == detalleIngreso.FechaEdicion) &&
-                        ediciones.Any(e => e.CantidadInicial <= detalleIngreso.Cantidad))
+                        ediciones.Any(e => e.CantidadInicial <= detalleIngreso.Cantidad) &&
+                        ediciones.Any(e => e.IdArticulo == detalleIngreso.IdArticulo))
                         {
                             Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleIngreso.NroEdicion 
-                            && e.FechaEdicion == detalleIngreso.FechaEdicion );
+                            && e.FechaEdicion == detalleIngreso.FechaEdicion
+                            && e.IdArticulo == detalleIngreso.IdArticulo);
                             _context.Remove(edicion);
                             await _context.SaveChangesAsync();
                            
@@ -101,7 +105,8 @@ namespace rest_api_sigedi.Controllers
                             
                             //actualizamos
                             Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleIngreso.NroEdicion 
-                            && e.FechaEdicion == detalleIngreso.FechaEdicion );
+                            && e.FechaEdicion == detalleIngreso.FechaEdicion
+                            && e.IdArticulo == detalleIngreso.IdArticulo);
 
                             edicion.CantidadInicial -= detalleIngreso.Cantidad;
                             edicion.CantidadActual -= detalleIngreso.Cantidad;
