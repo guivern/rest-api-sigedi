@@ -39,8 +39,84 @@ namespace rest_api_sigedi.Controllers
                 .Include(a => a.Detalle)
                     .ThenInclude(d => d.Precio);
         }
-    }
 
+        public override async Task<IActionResult> Create(IngresoDto dto)
+        {
+            
+            foreach (var detalle in dto.Detalle)
+            {
+                // verificamos si existe edicion y esta activa
+                var edicion = await _context.Ediciones
+                .Where(e => e.IdArticulo == detalle.IdArticulo && e.NroEdicion == detalle.NroEdicion && e.FechaEdicion == detalle.FechaEdicion && e.Activo)
+                .SingleOrDefaultAsync();
+
+                if (edicion == null)
+                {
+                    // generamos una nueva edicion
+                    Edicion nuevaEdicion = _mapper.Map<Edicion>(detalle);
+                    await _context.Ediciones.AddAsync(nuevaEdicion);
+                    await _context.SaveChangesAsync();
+                    //asignamos idEdicion al detalle
+                    detalle.IdEdicion = nuevaEdicion.Id;
+                }
+                else
+                {
+                    // ya existe la edicion, actualizamos
+                    edicion.CantidadInicial += detalle.Cantidad;
+                    edicion.CantidadActual += detalle.Cantidad;
+                    _context.Ediciones.Update(edicion);
+                    await _context.SaveChangesAsync();
+                    //asignamos idEdicion al detalle
+                    detalle.IdEdicion = edicion.Id;
+                }
+            }
+
+            return await base.Create(dto);
+        }
+
+        protected override async Task ExecutePostSave(IngresoDto dto)
+        {}
+
+        [HttpPut("[action]/{id}")]
+        public override async Task<IActionResult> Desactivar(long id)
+        {
+            var ingreso = await _context.Ingresos
+            .Include(i => i.Detalle)
+            .Where(i => i.Id == id)
+            .SingleOrDefaultAsync();
+
+            if (ingreso == null) return NotFound();
+
+            foreach (var detalle in ingreso.Detalle)
+            {
+                // obtenemos la edicion
+                var edicion = await _context.Ediciones
+                .FindAsync(detalle.IdEdicion);
+                
+                // restamos el stock
+                edicion.CantidadActual -= detalle.Cantidad;
+                edicion.CantidadInicial -= detalle.Cantidad;
+
+                if (edicion.CantidadInicial == 0)
+                { // fue el ultimo ingreso anulado o el unico ingreso
+                    edicion.Activo = false;
+                    _context.Ediciones.Update(edicion);
+                    await _context.SaveChangesAsync();
+                }
+            }
+            
+            ingreso.Activo = false;
+            if (IsAuditEntity)
+            {
+                ingreso.FechaUltimaModificacion = DateTime.Now;
+            }
+
+            _context.Entry(ingreso).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+    }
+    
     public class IngresoDto : DtoConDetalle<IngresoDetalleDto>
     {
         [Requerido]
@@ -54,9 +130,10 @@ namespace rest_api_sigedi.Controllers
     public class IngresoDetalleDto : DtoBase
     {
         [Requerido]
-        public long? IdArticulo {get; set;}
+        public long? IdArticulo { get; set; }
         [Requerido]
-        public long? IdPrecio {get; set;}
+        public long? IdPrecio { get; set; }
+        public long? IdEdicion { get; set; } = null;
         [Requerido]
         [NoNegativo]
         public long Cantidad { get; set; }
@@ -64,7 +141,7 @@ namespace rest_api_sigedi.Controllers
         public DateTime? FechaEdicion { get; set; }
         [Requerido]
         public long? NroEdicion { get; set; }
-        
+
     }
 
 }

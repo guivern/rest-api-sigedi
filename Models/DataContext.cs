@@ -47,9 +47,24 @@ namespace rest_api_sigedi.Models
             .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<IngresoDetalle>()
-            .HasOne(p => p.Ingreso)
-            .WithMany(a => a.Detalle)
-            .HasForeignKey(p => p.IdIngreso)
+            .HasOne(id => id.Ingreso)
+            .WithMany(i => i.Detalle)
+            .HasForeignKey(id => id.IdIngreso)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<IngresoDetalle>()
+            .HasOne(i => i.Articulo)
+            .WithMany()
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<IngresoDetalle>()
+            .HasOne(i => i.Precio)
+            .WithMany()
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<IngresoDetalle>()
+            .HasOne(i => i.Edicion)
+            .WithMany()
             .OnDelete(DeleteBehavior.Restrict);
         }
 

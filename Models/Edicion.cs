@@ -22,5 +22,13 @@ namespace rest_api_sigedi.Models
         public long NroEdicion {get; set;}
         public long CantidadInicial {get; set;}
         public long CantidadActual {get; set;}
+        
+        [NotMapped]
+        public String NombreArticulo => Articulo?.Descripcion;
+
+        [NotMapped]
+        public Decimal? PrecioVenta => Precio?.PrecioVenta; 
+        [NotMapped]
+        public Decimal? PrecioRendicion => Precio?.PrecioRendVendedor; 
     }
 }
