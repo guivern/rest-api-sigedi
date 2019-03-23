@@ -45,12 +45,12 @@ namespace rest_api_sigedi.Controllers
             
             foreach (var detalle in dto.Detalle)
             {
-                // verificamos si existe edicion
+                // verificamos si existe edicion y esta activa
                 var edicion = await _context.Ediciones
-                .Where(e => e.IdArticulo == detalle.IdArticulo && e.NroEdicion == detalle.NroEdicion && e.FechaEdicion == detalle.FechaEdicion)
+                .Where(e => e.IdArticulo == detalle.IdArticulo && e.NroEdicion == detalle.NroEdicion && e.FechaEdicion == detalle.FechaEdicion && e.Activo)
                 .SingleOrDefaultAsync();
 
-                if (edicion == null || !edicion.Activo)
+                if (edicion == null)
                 {
                     // generamos una nueva edicion
                     Edicion nuevaEdicion = _mapper.Map<Edicion>(detalle);
