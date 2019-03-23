@@ -20,12 +20,16 @@ namespace rest_api_sigedi.Models
         public Articulo Articulo {get; set;}
         public long IdArticulo {get; set;}
 
+        [ForeignKey("IdEdicion")]
+        [JsonIgnore]
+        public Edicion Edicion {get; set;}
+        public long IdEdicion {get; set;}
+
         [ForeignKey("IdPrecio")]
         [JsonIgnore]
         public Precio Precio {get; set;}
         public long IdPrecio {get; set;}
 
-        //campos propios
         public long Cantidad {get; set;}
         public DateTime? FechaEdicion {get; set;}
         public long NroEdicion {get; set;}

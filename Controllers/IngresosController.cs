@@ -40,99 +40,83 @@ namespace rest_api_sigedi.Controllers
                     .ThenInclude(d => d.Precio);
         }
 
-        protected override async Task ExecutePostSave(IngresoDto dto)
-        { 
-            // verificar si existe un nro edicion y fecha 
-            foreach (var detalleDto in dto.Detalle)
+        public override async Task<IActionResult> Create(IngresoDto dto)
+        {
+            
+            foreach (var detalle in dto.Detalle)
             {
-                var ediciones = await _context.Ediciones.ToListAsync();
+                // verificamos si existe edicion
+                var edicion = await _context.Ediciones
+                .Where(e => e.IdArticulo == detalle.IdArticulo && e.NroEdicion == detalle.NroEdicion && e.FechaEdicion == detalle.FechaEdicion)
+                .SingleOrDefaultAsync();
 
-                if (ediciones.Any(e => e.NroEdicion == detalleDto.NroEdicion) &&
-                ediciones.Any(e => e.FechaEdicion == detalleDto.FechaEdicion) &&
-                ediciones.Any(e => e.IdArticulo == detalleDto.IdArticulo))
+                if (edicion == null || !edicion.Activo)
                 {
-                    // ya existe, actualizamos
-                    Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleDto.NroEdicion 
-                    && e.FechaEdicion == detalleDto.FechaEdicion
-                    && e.IdArticulo == detalleDto.IdArticulo);
-                    
-                    edicion.CantidadInicial += detalleDto.Cantidad;
-                    edicion.CantidadActual += detalleDto.Cantidad;
+                    // generamos una nueva edicion
+                    Edicion nuevaEdicion = _mapper.Map<Edicion>(detalle);
+                    await _context.Ediciones.AddAsync(nuevaEdicion);
+                    await _context.SaveChangesAsync();
+                    //asignamos idEdicion al detalle
+                    detalle.IdEdicion = nuevaEdicion.Id;
+                }
+                else
+                {
+                    // ya existe la edicion, actualizamos
+                    edicion.CantidadInicial += detalle.Cantidad;
+                    edicion.CantidadActual += detalle.Cantidad;
+                    _context.Ediciones.Update(edicion);
+                    await _context.SaveChangesAsync();
+                    //asignamos idEdicion al detalle
+                    detalle.IdEdicion = edicion.Id;
+                }
+            }
+
+            return await base.Create(dto);
+        }
+
+        protected override async Task ExecutePostSave(IngresoDto dto)
+        {}
+
+        [HttpPut("[action]/{id}")]
+        public override async Task<IActionResult> Desactivar(long id)
+        {
+            var ingreso = await _context.Ingresos
+            .Include(i => i.Detalle)
+            .Where(i => i.Id == id)
+            .SingleOrDefaultAsync();
+
+            if (ingreso == null) return NotFound();
+
+            foreach (var detalle in ingreso.Detalle)
+            {
+                // obtenemos la edicion
+                var edicion = await _context.Ediciones
+                .FindAsync(detalle.IdEdicion);
+                
+                // restamos el stock
+                edicion.CantidadActual -= detalle.Cantidad;
+                edicion.CantidadInicial -= detalle.Cantidad;
+
+                if (edicion.CantidadInicial == 0)
+                { // fue el ultimo ingreso anulado o el unico ingreso
+                    edicion.Activo = false;
                     _context.Ediciones.Update(edicion);
                     await _context.SaveChangesAsync();
                 }
-                else{
-                    // creamos
-                    Edicion edicion = _mapper.Map<Edicion>(detalleDto);
-                    await _context.Ediciones.AddAsync(edicion);
-                    await _context.SaveChangesAsync();
-                }
-            } 
-        }
-      
-       [HttpPut("[action]/{id}")]
-        public override async Task<IActionResult> Desactivar(long id)
-        {
-            if (IsSoftDelete)
-            {
-                var ingreso = await _context.Ingresos.FindAsync(id);
-
-                var ingresoDetalle = await _context.IngresoDetalles.Where(a => a.IdIngreso == id).ToListAsync();
-                
-                if (ingreso == null) 
-                {
-                    return NotFound();
-                }
-                else{
-                    //recorremos el detalle
-                    foreach (var detalleIngreso in ingresoDetalle)
-                    {
-                        //listamos las ediciones
-                        var ediciones = await _context.Ediciones.ToListAsync();
-
-
-                        if (ediciones.Any(e => e.NroEdicion == detalleIngreso.NroEdicion) &&
-                        ediciones.Any(e => e.FechaEdicion == detalleIngreso.FechaEdicion) &&
-                        ediciones.Any(e => e.CantidadInicial <= detalleIngreso.Cantidad) &&
-                        ediciones.Any(e => e.IdArticulo == detalleIngreso.IdArticulo))
-                        {
-                            Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleIngreso.NroEdicion 
-                            && e.FechaEdicion == detalleIngreso.FechaEdicion
-                            && e.IdArticulo == detalleIngreso.IdArticulo);
-                            _context.Ediciones.Remove(edicion);
-                            await _context.SaveChangesAsync();
-                           
-                        }
-                        else{
-                            
-                            //actualizamos
-                            Edicion edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.NroEdicion == detalleIngreso.NroEdicion 
-                            && e.FechaEdicion == detalleIngreso.FechaEdicion
-                            && e.IdArticulo == detalleIngreso.IdArticulo);
-
-                            edicion.CantidadInicial -= detalleIngreso.Cantidad;
-                            edicion.CantidadActual -= detalleIngreso.Cantidad;
-                            _context.Ediciones.Update(edicion);
-                            await _context.SaveChangesAsync();
-                        }
-                    }
-                    ingreso.Activo = false;
-                }
-                if (IsAuditEntity)
-                {
-                    ingreso.FechaUltimaModificacion = DateTime.Now;
-                }
-
-                _context.Entry(ingreso).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return NoContent();
             }
-            return StatusCode(405);
-        }
-        
-       
-    }
+            
+            ingreso.Activo = false;
+            if (IsAuditEntity)
+            {
+                ingreso.FechaUltimaModificacion = DateTime.Now;
+            }
 
+            _context.Entry(ingreso).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+    }
+    
     public class IngresoDto : DtoConDetalle<IngresoDetalleDto>
     {
         [Requerido]
@@ -146,9 +130,10 @@ namespace rest_api_sigedi.Controllers
     public class IngresoDetalleDto : DtoBase
     {
         [Requerido]
-        public long? IdArticulo {get; set;}
+        public long? IdArticulo { get; set; }
         [Requerido]
-        public long? IdPrecio {get; set;}
+        public long? IdPrecio { get; set; }
+        public long? IdEdicion { get; set; } = null;
         [Requerido]
         [NoNegativo]
         public long Cantidad { get; set; }
@@ -156,7 +141,7 @@ namespace rest_api_sigedi.Controllers
         public DateTime? FechaEdicion { get; set; }
         [Requerido]
         public long? NroEdicion { get; set; }
-        
+
     }
 
 }
