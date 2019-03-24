@@ -17,12 +17,12 @@ namespace rest_api_sigedi.Models
         public Precio Precio {get; set;}
         public long IdPrecio {get; set;}
 
-        //campos propios
         public DateTime? FechaEdicion {get; set;}
         public long NroEdicion {get; set;}
         public long CantidadInicial {get; set;}
         public long CantidadActual {get; set;}
-        
+        public bool Anulado {get; set;} = false;
+
         [NotMapped]
         public String NombreArticulo => Articulo?.Descripcion;
 
