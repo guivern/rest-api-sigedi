@@ -21,7 +21,8 @@ namespace rest_api_sigedi.Controllers
         {
             return query
             .Include(e => e.Articulo)
-            .Include(e => e.Precio);
+            .Include(e => e.Precio)
+            .Where(e => !e.Anulado); // no incluimos los anulados
         }
     }
 

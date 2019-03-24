@@ -100,6 +100,7 @@ namespace rest_api_sigedi.Controllers
                 if (edicion.CantidadInicial == 0)
                 { // fue el ultimo ingreso anulado o el unico ingreso
                     edicion.Activo = false;
+                    edicion.Anulado = true;
                     _context.Ediciones.Update(edicion);
                     await _context.SaveChangesAsync();
                 }
