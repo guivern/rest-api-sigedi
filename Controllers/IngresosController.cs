@@ -45,9 +45,9 @@ namespace rest_api_sigedi.Controllers
             
             foreach (var detalle in dto.Detalle)
             {
-                // verificamos si existe edicion y esta activa
+                // verificamos si existe edicion 
                 var edicion = await _context.Ediciones
-                .Where(e => e.IdArticulo == detalle.IdArticulo && e.NroEdicion == detalle.NroEdicion && e.FechaEdicion == detalle.FechaEdicion && e.Activo)
+                .Where(e => e.IdArticulo == detalle.IdArticulo && e.NroEdicion == detalle.NroEdicion && e.FechaEdicion == detalle.FechaEdicion)
                 .SingleOrDefaultAsync();
 
                 if (edicion == null)
@@ -64,6 +64,8 @@ namespace rest_api_sigedi.Controllers
                     // ya existe la edicion, actualizamos
                     edicion.CantidadInicial += detalle.Cantidad;
                     edicion.CantidadActual += detalle.Cantidad;
+                    edicion.Activo = true;
+                    edicion.Anulado = false;
                     _context.Ediciones.Update(edicion);
                     await _context.SaveChangesAsync();
                     //asignamos idEdicion al detalle

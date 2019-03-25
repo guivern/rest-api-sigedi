@@ -78,5 +78,6 @@ namespace rest_api_sigedi.Models
         public DbSet<Ingreso> Ingresos {get; set;}
         public DbSet<IngresoDetalle> IngresoDetalles {get; set;}
         public DbSet<Edicion> Ediciones {get; set;}
+        public DbSet<Egreso> Egresos {get; set;}
     }
 }

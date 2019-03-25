@@ -24,16 +24,42 @@ namespace rest_api_sigedi.Controllers
             .Include(e => e.Precio)
             .Where(e => !e.Anulado); // no incluimos los anulados
         }
+
+        [HttpPost]
+        public async Task<IActionResult> DarBaja(EdicionDto dto)
+        { 
+            // obtenemos la edicion
+            var edicion = await _context.Ediciones
+            .FindAsync(dto.Id);
+
+            if (edicion == null) return NotFound();
+            //creamos un egreso
+            
+            var nuevoEgreso = new Egreso();
+            nuevoEgreso.IdEdicion = edicion.Id;
+            nuevoEgreso.Cantidad = edicion.CantidadActual;
+            nuevoEgreso.Fecha = DateTime.Now;
+            nuevoEgreso.FechaCreacion = DateTime.Now;
+            nuevoEgreso.IdUsuarioCreador = dto.IdUsuarioCreador;
+            
+            await _context.Egresos.AddAsync(nuevoEgreso);
+            await _context.SaveChangesAsync();
+            
+            //cambiamos de estado y ceramos
+            edicion.Activo = false;
+            edicion.CantidadActual = 0;
+            edicion.CantidadInicial = 0;
+
+            _context.Ediciones.Update(edicion);
+            await _context.SaveChangesAsync();
+            
+            return NoContent();
+        }
+
     }
 
     public class EdicionDto : DtoBase
     {
-        
-        public long IdArticulo {get; set;}
-        public long IdPrecio {get; set;}
-        public DateTime? FechaEdicion {get; set;}
-        public long NroEdicion {get; set;}
-        public long CantidadInicial {get; set;}
-        public long CantidadActual {get; set;}
+        public long IdUsuarioCreador {get; set;}
     }
 }
