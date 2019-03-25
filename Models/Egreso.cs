@@ -18,10 +18,10 @@ namespace rest_api_sigedi.Models
         public long? NroEdicion => Edicion?.NroEdicion; 
         [NotMapped]
         public string NombreUsuario => UsuarioCreador?.Username;
-
+        [NotMapped]
+        public DateTime? FechaEdicion => Edicion?.FechaEdicion;
         [NotMapped]
         public String NombreArticulo => Edicion?.Articulo?.Descripcion;
-
         [NotMapped]
         public Decimal? PrecioVenta => Edicion?.Precio?.PrecioVenta; 
         [NotMapped]
