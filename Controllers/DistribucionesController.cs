@@ -139,7 +139,7 @@ namespace rest_api_sigedi.Controllers
         public long IdEdicion { get; set; }
         public long? IdMovimiento { get; set; } = null;
         [Requerido]
-        [NoNegativo]
+        [MayorACero]
         public long Cantidad { get; set; }
 
     }
