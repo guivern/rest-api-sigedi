@@ -15,7 +15,7 @@ namespace rest_api_sigedi.Models
         [NotMapped]
         public string NombreUsuario => UsuarioCreador?.Username;
         [NotMapped]
-        public string NombreVendedor => Vendedor.Nombre + " " + Vendedor.Apellido;
+        public string NombreVendedor => Vendedor?.Nombre + " " + Vendedor?.Apellido;
         [NotMapped]
         public ICollection<DistribucionDetalle> Detalle {get; set;}
         

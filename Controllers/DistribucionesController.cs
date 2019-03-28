@@ -14,16 +14,18 @@ namespace rest_api_sigedi.Controllers
     {
         public DistribucionesController(DataContext context, IMapper mapper) : base(context, mapper)
         { }
-        
+
         protected override async Task<bool> IsValidModel(DistribucionDto dto)
         {
             if (dto.Detalle.Count == 0)
             {
                 ModelState.AddModelError(
-                nameof(dto.Detalle), "Debe ingresar al menos un detalle para la distribución");
-                return false;
+                nameof(dto.Detalle), "Debe ingresar al menos un detalle");
+                return ModelState.IsValid;
             }
+
             //verificamos que la cantidad ingresada no supere el stock
+            var index = 0;
             foreach (var detalle in dto.Detalle)
             {
                 var edicion = await _context.Ediciones
@@ -33,11 +35,11 @@ namespace rest_api_sigedi.Controllers
                 if (detalle.Cantidad > edicion.CantidadActual)
                 {
                     ModelState.AddModelError(
-                    nameof(dto.Detalle), "La cantidad ingresada excede el stock");
-                    return false;
+                    $"Detalle[{index}].Cantidad", "Excede el stock");
                 }
+                index++;
             }
-            return true;
+            return ModelState.IsValid;
         }
         protected override IQueryable<Distribucion> IncludeListFields(IQueryable<Distribucion> query)
         {
@@ -45,6 +47,7 @@ namespace rest_api_sigedi.Controllers
             .Include(d => d.Vendedor)
             .Include(d => d.UsuarioCreador);
         }
+
         protected override IQueryable<Distribucion> IncludeDetailFields(IQueryable<Distribucion> query)
         {
             return query
@@ -53,7 +56,7 @@ namespace rest_api_sigedi.Controllers
                 .Include(d => d.Detalle)
                     .ThenInclude(e => e.Edicion.Articulo)
                 .Include(d => d.Detalle)
-                    .ThenInclude(e => e.Edicion.Precio);   
+                    .ThenInclude(e => e.Edicion.Precio);
         }
 
         public override async Task<IActionResult> Create(DistribucionDto dto)
@@ -92,22 +95,31 @@ namespace rest_api_sigedi.Controllers
                     {
                         //ya existe el movimiento, actualizamos
                         movimiento.Llevo += detalle.Cantidad;
-                        movimiento.Monto += (detalle.Cantidad * edicion.Precio.PrecioRendVendedor );
-                        movimiento.Saldo += (detalle.Cantidad * edicion.Precio.PrecioRendVendedor); 
+                        movimiento.Monto += (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
+                        movimiento.Saldo += (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
                         _context.Movimientos.Update(movimiento);
                         await _context.SaveChangesAsync();
                         //asignamos idMovimiento al detalle
                         detalle.IdMovimiento = movimiento.Id;
                     }
-
-                    //disminuimos del stock de esa edicion
-                    edicion.CantidadActual -= detalle.Cantidad;
-                    _context.Ediciones.Update(edicion);
-                    await _context.SaveChangesAsync(); 
                 }
                 return await base.Create(dto);
             }
             return BadRequest(ModelState);
+        }
+
+        protected override async Task ExecutePostSave(DistribucionDto dto)
+        {
+            //disminuimos el stock 
+            foreach (var detalle in dto.Detalle)
+            {
+                Edicion edicion = await _context.Ediciones.FindAsync(detalle.IdEdicion);
+                edicion.CantidadActual -= detalle.Cantidad;
+
+                _context.Ediciones.Update(edicion);
+                await _context.SaveChangesAsync();
+            }
+
         }
     }
 
@@ -125,10 +137,10 @@ namespace rest_api_sigedi.Controllers
     {
         [Requerido]
         public long IdEdicion { get; set; }
-        public long? IdMovimiento {get; set;} = null;
+        public long? IdMovimiento { get; set; } = null;
         [Requerido]
         [NoNegativo]
         public long Cantidad { get; set; }
-     
+
     }
 }
