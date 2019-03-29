@@ -95,8 +95,8 @@ namespace rest_api_sigedi.Controllers
                     {
                         //ya existe el movimiento, actualizamos
                         movimiento.Llevo += (long) detalle.Cantidad;
-                        movimiento.Monto += (long) (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
-                        movimiento.Saldo += (long) (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
+                        movimiento.Monto += (decimal) (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
+                        movimiento.Saldo += (decimal) (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
                         _context.Movimientos.Update(movimiento);
                         await _context.SaveChangesAsync();
                         //asignamos idMovimiento al detalle
