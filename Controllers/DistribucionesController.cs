@@ -80,9 +80,9 @@ namespace rest_api_sigedi.Controllers
                     {
                         //generamos un movimiento nuevo
                         var nuevoMovimiento = new Movimiento();
-                        nuevoMovimiento.IdVendedor = dto.IdVendedor;
-                        nuevoMovimiento.IdEdicion = detalle.IdEdicion;
-                        nuevoMovimiento.Llevo = detalle.Cantidad;
+                        nuevoMovimiento.IdVendedor = (long) dto.IdVendedor;
+                        nuevoMovimiento.IdEdicion = (long) detalle.IdEdicion;
+                        nuevoMovimiento.Llevo = (long) detalle.Cantidad;
                         nuevoMovimiento.Monto = nuevoMovimiento.Llevo * edicion.Precio.PrecioRendVendedor;
                         nuevoMovimiento.Saldo = nuevoMovimiento.Llevo * edicion.Precio.PrecioRendVendedor;
 
@@ -94,9 +94,9 @@ namespace rest_api_sigedi.Controllers
                     else
                     {
                         //ya existe el movimiento, actualizamos
-                        movimiento.Llevo += detalle.Cantidad;
-                        movimiento.Monto += (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
-                        movimiento.Saldo += (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
+                        movimiento.Llevo += (long) detalle.Cantidad;
+                        movimiento.Monto += (long) (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
+                        movimiento.Saldo += (long) (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
                         _context.Movimientos.Update(movimiento);
                         await _context.SaveChangesAsync();
                         //asignamos idMovimiento al detalle
@@ -114,7 +114,7 @@ namespace rest_api_sigedi.Controllers
             foreach (var detalle in dto.Detalle)
             {
                 Edicion edicion = await _context.Ediciones.FindAsync(detalle.IdEdicion);
-                edicion.CantidadActual -= detalle.Cantidad;
+                edicion.CantidadActual -= (long) detalle.Cantidad;
 
                 _context.Ediciones.Update(edicion);
                 await _context.SaveChangesAsync();
@@ -128,7 +128,7 @@ namespace rest_api_sigedi.Controllers
     public class DistribucionDto : DtoConDetalle<DistribucionDetalleDto>
     {
         [Requerido]
-        public long IdVendedor { get; set; }
+        public long? IdVendedor { get; set; }
         [Requerido]
         public long? IdUsuarioCreador { get; set; }
 
@@ -136,11 +136,11 @@ namespace rest_api_sigedi.Controllers
     public class DistribucionDetalleDto : DtoBase
     {
         [Requerido]
-        public long IdEdicion { get; set; }
+        public long? IdEdicion { get; set; }
         public long? IdMovimiento { get; set; } = null;
         [Requerido]
         [MayorACero]
-        public long Cantidad { get; set; }
+        public long? Cantidad { get; set; }
 
     }
 }
