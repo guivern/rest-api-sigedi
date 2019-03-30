@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace rest_api_sigedi.Models
 {
-    public class Distribucion : AuditEntityBase
+    public class Distribucion : EntityBaseConDetalle<DistribucionDetalle>
     {
         [ForeignKey("IdVendedor")]
         [JsonIgnore]
@@ -16,8 +16,5 @@ namespace rest_api_sigedi.Models
         public string NombreUsuario => UsuarioCreador?.Username;
         [NotMapped]
         public string NombreVendedor => Vendedor?.Nombre + " " + Vendedor?.Apellido;
-        [NotMapped]
-        public ICollection<DistribucionDetalle> Detalle {get; set;}
-        
     }
 }

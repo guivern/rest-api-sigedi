@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace rest_api_sigedi.Models
 {
-    public class Articulo: SoftDeleteEntityBase
+    public class Articulo: EntityBaseConDetalle<Precio>
     {
         [ForeignKey("IdCategoria")]
         [JsonIgnore]
@@ -18,8 +18,6 @@ namespace rest_api_sigedi.Models
 
         public long? Codigo {get; set;}
 
-        [NotMapped]
-        public ICollection<Precio> Detalle {get; set;}
         [NotMapped]
         public string NombreCategoria => Categoria?.Descripcion;
         [NotMapped]

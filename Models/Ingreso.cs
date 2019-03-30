@@ -6,18 +6,14 @@ using Newtonsoft.Json;
 
 namespace rest_api_sigedi.Models
 {
-    public class Ingreso: AuditEntityBase
+    public class Ingreso: EntityBaseConDetalle<IngresoDetalle>
     {
         [ForeignKey("IdProveedor")]
         [JsonIgnore]
         public Proveedor Proveedor {get; set;}
         public long IdProveedor {get; set;}
-        //campos propios
         public string TipoComprobante {get; set;}
         public string NumeroComprobante {get; set;}
-
-        [NotMapped]
-        public ICollection<IngresoDetalle> Detalle {get; set;}
 
         [NotMapped]
         public string NombreProveedor => Proveedor?.RazonSocial;
