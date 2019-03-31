@@ -41,6 +41,7 @@ namespace rest_api_sigedi.Controllers
             }
             return ModelState.IsValid;
         }
+
         protected override IQueryable<Distribucion> IncludeListFields(IQueryable<Distribucion> query)
         {
             return query
@@ -59,71 +60,63 @@ namespace rest_api_sigedi.Controllers
                     .ThenInclude(e => e.Edicion.Precio);
         }
 
-        public override async Task<IActionResult> Create(DistribucionDto dto)
+        protected override async Task ExecuteBeforeSave(DistribucionDto dto)
         {
-            if (await IsValidModel(dto))
+            foreach (var detalleDto in dto.Detalle)
             {
-                foreach (var detalle in dto.Detalle)
-                {
-                    //verificamos que exista un movimiento
-                    var movimiento = await _context.Movimientos
-                    .Where(m => m.IdEdicion == detalle.IdEdicion && m.IdVendedor == dto.IdVendedor
-                    && m.Activo == true).SingleOrDefaultAsync();
+                // obtenemos la edicion del detalle
+                var edicion = await _context.Ediciones
+                .Include(e => e.Precio)
+                .SingleOrDefaultAsync(e => e.Id == detalleDto.IdEdicion);
 
-                    //obtenemos la edicion 
-                    var edicion = await _context.Ediciones
-                    .Include(p => p.Precio)
-                    .Where(e => e.Id == detalle.IdEdicion)
-                    .SingleOrDefaultAsync();
+                // calculamos monto y saldo 
+                detalleDto.Monto = detalleDto.Saldo = detalleDto.Cantidad * edicion.Precio.PrecioRendVendedor;
 
-                    if (movimiento == null)
-                    {
-                        //generamos un movimiento nuevo
-                        var nuevoMovimiento = new Movimiento();
-                        nuevoMovimiento.IdVendedor = (long) dto.IdVendedor;
-                        nuevoMovimiento.IdEdicion = (long) detalle.IdEdicion;
-                        nuevoMovimiento.Llevo = (long) detalle.Cantidad;
-                        nuevoMovimiento.Monto = nuevoMovimiento.Llevo * edicion.Precio.PrecioRendVendedor;
-                        nuevoMovimiento.Saldo = nuevoMovimiento.Llevo * edicion.Precio.PrecioRendVendedor;
-
-                        await _context.Movimientos.AddAsync(nuevoMovimiento);
-                        await _context.SaveChangesAsync();
-                        //asignamos idMovimiento al detalle
-                        detalle.IdMovimiento = nuevoMovimiento.Id;
-                    }
-                    else
-                    {
-                        //ya existe el movimiento, actualizamos
-                        movimiento.Llevo += (long) detalle.Cantidad;
-                        movimiento.Monto += (decimal) (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
-                        movimiento.Saldo += (decimal) (detalle.Cantidad * edicion.Precio.PrecioRendVendedor);
-                        _context.Movimientos.Update(movimiento);
-                        await _context.SaveChangesAsync();
-                        //asignamos idMovimiento al detalle
-                        detalle.IdMovimiento = movimiento.Id;
-                    }
+                //actualizamos stock
+                if (detalleDto.Id == null)
+                {   // es un nuevo detalle
+                    edicion.CantidadActual -= (long)detalleDto.Cantidad;
                 }
-                return await base.Create(dto);
-            }
-            return BadRequest(ModelState);
-        }
-
-        protected override async Task ExecutePostSave(DistribucionDto dto)
-        {
-            //disminuimos el stock 
-            foreach (var detalle in dto.Detalle)
-            {
-                Edicion edicion = await _context.Ediciones.FindAsync(detalle.IdEdicion);
-                edicion.CantidadActual -= (long) detalle.Cantidad;
+                else
+                {   // es un detalle existente
+                    // obtenemos el detalle
+                    var detalleDb = await _context.DistribucionDetalles.FindAsync(detalleDto.Id);
+                    edicion.CantidadActual -= (long)detalleDto.Cantidad - detalleDb.Cantidad;
+                }
 
                 _context.Ediciones.Update(edicion);
                 await _context.SaveChangesAsync();
             }
 
+            // verificamos los detalles eliminados para reponer stock
+            if (dto.Id != null)
+            {
+                var detallesDb = await _context.DistribucionDetalles
+                .Where(d => d.IdDistribucion == dto.Id)
+                .ToListAsync();
+
+                foreach (var detDb in detallesDb)
+                {
+                    var seElimina = true;
+                    foreach (var detDto in dto.Detalle)
+                    {
+                        if (detDb.Id == detDto.Id)
+                        {
+                            seElimina = false;
+                        }
+                    }
+                    if (seElimina)
+                    {
+                        var edicion = await _context.Ediciones
+                        .SingleOrDefaultAsync(e => e.Id == detDb.IdEdicion);
+                        edicion.CantidadActual += detDb.Cantidad;
+                        _context.Ediciones.Update(edicion);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            }
         }
     }
-
-
 
     public class DistribucionDto : DtoConDetalle<DistribucionDetalleDto>
     {
@@ -131,16 +124,22 @@ namespace rest_api_sigedi.Controllers
         public long? IdVendedor { get; set; }
         [Requerido]
         public long? IdUsuarioCreador { get; set; }
+        public long? IdUsuarioModificador { get; set; }
+        public bool? Anulable { get; set; } = true;
+        public bool? Editable { get; set; } = true;
 
     }
+
     public class DistribucionDetalleDto : DtoBase
     {
         [Requerido]
         public long? IdEdicion { get; set; }
-        public long? IdMovimiento { get; set; } = null;
         [Requerido]
         [MayorACero]
         public long? Cantidad { get; set; }
-
+        public decimal? Monto { get; set; } // seteamos en el controller
+        public decimal? Saldo { get; set; } // seteamos en el controller
+        public bool? Anulable { get; set; } = true;
+        public bool? Editable { get; set; } = true;
     }
 }

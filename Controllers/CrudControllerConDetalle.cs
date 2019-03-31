@@ -25,12 +25,15 @@ namespace rest_api_sigedi.Controllers
         {
             if (await IsValidModel(dto))
             {
-                // obtenemos la entidad padre luego de mapear y guardamos
+                // obtenemos los datos del dto y mapeamos a su clase entidad
                 TEntity entity = _mapper.Map<TEntity>(dto);
+                // realizamos alguna tarea antes de guardar
+                await ExecuteBeforeSave(dto);
+                // guardamos la cabecera
                 await EntityDbSet.AddAsync(entity);
                 await _context.SaveChangesAsync();
 
-                // obtenemos los detalles luego de mapear y guardamos
+                // obtenemos los detalles del dto y mapeamos a su clase entidad
                 IEnumerable<TEntityDetalle> detalles = _mapper.Map<IEnumerable<TEntityDetalle>>(dto.Detalle);
 
                 // seteamos el Id padre de la relacion en cada detalle
@@ -47,9 +50,10 @@ namespace rest_api_sigedi.Controllers
                         }
                     }
                 }
-
+                // guardamos los detalles
                 EntityDetalleDbSet.AddRange(detalles);
                 await _context.SaveChangesAsync();
+                // realizamos alguna tarea luego de guardar
                 await ExecutePostSave(dto);
 
                 return CreatedAtAction("Detail", new { id = entity.Id }, entity);
@@ -72,14 +76,25 @@ namespace rest_api_sigedi.Controllers
                 {
                     (entity as AuditEntityBase).FechaUltimaModificacion = DateTime.Now;
                 }
-                // guardamos
+                // realizamos alguna tarea antes de guardar
+                await ExecuteBeforeSave(dto);
+                // guardamos la cabecera
                 _context.Entry(entity).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
                 // trabajamos con los detalles
+                // obtenemos los detalles desde la base de datos
+                var entityDb = await EntityDbSet
+                .Include( e => e.Detalle)
+                .Select( e => new {
+                    e.Id,
+                    detalle = e.Detalle
+                })
+                .SingleAsync(e => e.Id == entity.Id);
+
+                // verificamos si hay detalles nuevos para agregar
                 foreach (var detalleDto in dto.Detalle)
                 {
-                    // verificamos si hay detalles nuevos para agregar
                     if (detalleDto.Id == null)
                     {   // es nuevo
                         TEntityDetalle detalle = _mapper.Map<TEntityDetalle>(detalleDto);
@@ -110,16 +125,8 @@ namespace rest_api_sigedi.Controllers
                         await _context.SaveChangesAsync();
                     }
                 }
-
+                
                 // eliminamos los detalles que ya no se encuentran en el dto
-                var entityDb = await EntityDbSet
-                .Include( e => e.Detalle)
-                .Select( e => new {
-                    e.Id,
-                    detalle = e.Detalle
-                })
-                .SingleAsync(e => e.Id == entity.Id);
-
                 foreach (var detDb in entityDb.detalle)
                 {
                     var seElimina = true;
@@ -136,14 +143,18 @@ namespace rest_api_sigedi.Controllers
                         await _context.SaveChangesAsync();
                     }
                 }
-
+                // realizamos alguna tarea luego de guardar
                 await ExecutePostSave(dto);
                 return NoContent();
             }
             return BadRequest(ModelState);
         }
 
-        // sobreescribir si se desea realizar algo con los detalles luego de guardar
+        // sobreescribir si se desea realizar algo antes de guardar
+        protected async virtual Task ExecuteBeforeSave(TDto dto)
+        { }
+
+        // sobreescribir si se desea realizar algo luego de guardar
         protected async virtual Task ExecutePostSave(TDto dto)
         { }
     }
