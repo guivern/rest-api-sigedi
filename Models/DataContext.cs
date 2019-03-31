@@ -74,11 +74,6 @@ namespace rest_api_sigedi.Models
             .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<DistribucionDetalle>()
-            .HasOne(dd => dd.Movimiento)
-            .WithMany()
-            .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<DistribucionDetalle>()
             .HasOne(dd => dd.Edicion)
             .WithMany()
             .OnDelete(DeleteBehavior.Restrict);
@@ -97,6 +92,5 @@ namespace rest_api_sigedi.Models
         public DbSet<Egreso> Egresos {get; set;}
         public DbSet<Distribucion> Distribuciones {get; set;}
         public DbSet<DistribucionDetalle> DistribucionDetalles {get; set;}
-        public DbSet<Movimiento> Movimientos {get; set;}
     }
 }

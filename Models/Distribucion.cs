@@ -12,6 +12,9 @@ namespace rest_api_sigedi.Models
         public Vendedor Vendedor {get; set;}
         public long IdVendedor {get; set;}
 
+        public bool? Anulable {get; set;} = true;
+        public bool? Editable {get; set;} = true;
+
         [NotMapped]
         public string NombreUsuario => UsuarioCreador?.Username;
         [NotMapped]
