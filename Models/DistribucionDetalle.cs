@@ -33,9 +33,11 @@ namespace rest_api_sigedi.Models
         [Required]
         public decimal Saldo {get; set;}
         
-        public bool? Anulable {get; set;} = true;
+        public bool Anulable {get; set;} = true;
         
-        public bool? Editable {get; set;} = true;
+        public bool Editable {get; set;} = true;
+
+        public bool Anulado {get; set;} = false;
 
         /* El atributo Activo cuando es:
             True: Indica que aún no se cancelo, es decir, saldo > 0

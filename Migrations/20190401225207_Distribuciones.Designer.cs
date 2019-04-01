@@ -10,7 +10,7 @@ using rest_api_sigedi.Models;
 namespace RestApiSigedi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20190330204523_Distribuciones")]
+    [Migration("20190401225207_Distribuciones")]
     partial class Distribuciones
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -78,7 +78,13 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<bool>("Activo");
 
+                    b.Property<bool>("Anulable");
+
+                    b.Property<bool>("Anulado");
+
                     b.Property<string>("Descripcion");
+
+                    b.Property<bool>("Editable");
 
                     b.Property<DateTime>("FechaCreacion");
 
@@ -108,7 +114,9 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<bool>("Activo");
 
-                    b.Property<bool?>("Anulable");
+                    b.Property<bool>("Anulable");
+
+                    b.Property<bool>("Anulado");
 
                     b.Property<long>("Cantidad");
 
@@ -116,7 +124,7 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<long?>("Devoluciones");
 
-                    b.Property<bool?>("Editable");
+                    b.Property<bool>("Editable");
 
                     b.Property<long>("IdDistribucion");
 

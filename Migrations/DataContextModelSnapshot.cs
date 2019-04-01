@@ -76,11 +76,13 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<bool>("Activo");
 
-                    b.Property<bool?>("Anulable");
+                    b.Property<bool>("Anulable");
+
+                    b.Property<bool>("Anulado");
 
                     b.Property<string>("Descripcion");
 
-                    b.Property<bool?>("Editable");
+                    b.Property<bool>("Editable");
 
                     b.Property<DateTime>("FechaCreacion");
 
@@ -110,7 +112,9 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<bool>("Activo");
 
-                    b.Property<bool?>("Anulable");
+                    b.Property<bool>("Anulable");
+
+                    b.Property<bool>("Anulado");
 
                     b.Property<long>("Cantidad");
 
@@ -118,7 +122,7 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<long?>("Devoluciones");
 
-                    b.Property<bool?>("Editable");
+                    b.Property<bool>("Editable");
 
                     b.Property<long>("IdDistribucion");
 

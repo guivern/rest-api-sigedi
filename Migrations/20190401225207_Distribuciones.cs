@@ -61,7 +61,10 @@ namespace RestApiSigedi.Migrations
                     IdUsuarioModificador = table.Column<long>(nullable: true),
                     FechaCreacion = table.Column<DateTime>(nullable: false),
                     FechaUltimaModificacion = table.Column<DateTime>(nullable: true),
-                    IdVendedor = table.Column<long>(nullable: false)
+                    IdVendedor = table.Column<long>(nullable: false),
+                    Anulable = table.Column<bool>(nullable: false),
+                    Editable = table.Column<bool>(nullable: false),
+                    Anulado = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -101,8 +104,9 @@ namespace RestApiSigedi.Migrations
                     Monto = table.Column<decimal>(nullable: false),
                     Importe = table.Column<decimal>(nullable: true),
                     Saldo = table.Column<decimal>(nullable: false),
-                    Anulable = table.Column<bool>(nullable: true),
-                    Editable = table.Column<bool>(nullable: true)
+                    Anulable = table.Column<bool>(nullable: false),
+                    Editable = table.Column<bool>(nullable: false),
+                    Anulado = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
