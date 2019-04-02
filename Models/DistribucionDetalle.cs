@@ -6,7 +6,7 @@ using rest_api_sigedi.Annotations;
 
 namespace rest_api_sigedi.Models
 {
-    public class DistribucionDetalle : EntityBase
+    public class DistribucionDetalle : SoftDeleteEntityBase
     {
         [ForeignKey("IdDistribucion")]
         [JsonIgnore]
@@ -20,13 +20,29 @@ namespace rest_api_sigedi.Models
         public Edicion Edicion {get; set;}
         public long IdEdicion {get; set;}
 
-        [ForeignKey("IdMovimiento")]
-        [JsonIgnore]
-        public Movimiento Movimiento {get; set;}
-        public long IdMovimiento {get; set;}
-
         [Required]
         public long Cantidad {get; set;}
+
+        public long? Devoluciones {get; set;} = 0;
+
+        [Required]
+        public decimal Monto {get; set;}
+        
+        public decimal? Importe {get; set;} = 0;
+        
+        [Required]
+        public decimal Saldo {get; set;}
+        
+        public bool Anulable {get; set;} = true;
+        
+        public bool Editable {get; set;} = true;
+
+        public bool Anulado {get; set;} = false;
+
+        /* El atributo Activo cuando es:
+            True: Indica que aún no se cancelo, es decir, saldo > 0
+            False: Indica que ya se cancelo distribucion, saldo == 0
+        */
 
         [NotMapped]
         public DateTime? FechaEdicion => Edicion?.FechaEdicion;

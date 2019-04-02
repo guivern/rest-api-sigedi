@@ -10,8 +10,7 @@ namespace rest_api_sigedi.Models
         [ForeignKey("IdUsuarioCreador")]
         [JsonIgnore]
         public Usuario UsuarioCreador {get; set;}
-        [Required]
-        public long IdUsuarioCreador {get; set;}
+        public long? IdUsuarioCreador {get; set;}
 
         [ForeignKey("IdUsuarioModificador")]
         [JsonIgnore]
@@ -24,5 +23,7 @@ namespace rest_api_sigedi.Models
 
         [NotMapped]
         public string NombreUsuarioCreador => UsuarioCreador?.Username;
+        [NotMapped]
+        public string NombreUsuarioModificador => UsuarioModificador?.Username;
     }
 }

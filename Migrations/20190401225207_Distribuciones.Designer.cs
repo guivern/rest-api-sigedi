@@ -10,7 +10,7 @@ using rest_api_sigedi.Models;
 namespace RestApiSigedi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20190326221845_Distribuciones")]
+    [Migration("20190401225207_Distribuciones")]
     partial class Distribuciones
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -18,7 +18,7 @@ namespace RestApiSigedi.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-                .HasAnnotation("ProductVersion", "2.2.2-servicing-10034")
+                .HasAnnotation("ProductVersion", "2.2.3-servicing-35854")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("rest_api_sigedi.Models.Articulo", b =>
@@ -32,15 +32,27 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<string>("Descripcion");
 
+                    b.Property<DateTime>("FechaCreacion");
+
+                    b.Property<DateTime?>("FechaUltimaModificacion");
+
                     b.Property<long>("IdCategoria");
 
                     b.Property<long>("IdProveedor");
+
+                    b.Property<long?>("IdUsuarioCreador");
+
+                    b.Property<long?>("IdUsuarioModificador");
 
                     b.HasKey("Id");
 
                     b.HasIndex("IdCategoria");
 
                     b.HasIndex("IdProveedor");
+
+                    b.HasIndex("IdUsuarioCreador");
+
+                    b.HasIndex("IdUsuarioModificador");
 
                     b.ToTable("Articulos");
                 });
@@ -66,13 +78,19 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<bool>("Activo");
 
+                    b.Property<bool>("Anulable");
+
+                    b.Property<bool>("Anulado");
+
                     b.Property<string>("Descripcion");
+
+                    b.Property<bool>("Editable");
 
                     b.Property<DateTime>("FechaCreacion");
 
                     b.Property<DateTime?>("FechaUltimaModificacion");
 
-                    b.Property<long>("IdUsuarioCreador");
+                    b.Property<long?>("IdUsuarioCreador");
 
                     b.Property<long?>("IdUsuarioModificador");
 
@@ -94,23 +112,35 @@ namespace RestApiSigedi.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<bool>("Activo");
+
+                    b.Property<bool>("Anulable");
+
+                    b.Property<bool>("Anulado");
+
                     b.Property<long>("Cantidad");
 
                     b.Property<string>("Descripcion");
+
+                    b.Property<long?>("Devoluciones");
+
+                    b.Property<bool>("Editable");
 
                     b.Property<long>("IdDistribucion");
 
                     b.Property<long>("IdEdicion");
 
-                    b.Property<long>("IdMovimiento");
+                    b.Property<decimal?>("Importe");
+
+                    b.Property<decimal>("Monto");
+
+                    b.Property<decimal>("Saldo");
 
                     b.HasKey("Id");
 
                     b.HasIndex("IdDistribucion");
 
                     b.HasIndex("IdEdicion");
-
-                    b.HasIndex("IdMovimiento");
 
                     b.ToTable("DistribucionDetalles");
                 });
@@ -166,7 +196,7 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<long>("IdEdicion");
 
-                    b.Property<long>("IdUsuarioCreador");
+                    b.Property<long?>("IdUsuarioCreador");
 
                     b.Property<long?>("IdUsuarioModificador");
 
@@ -196,7 +226,7 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<long>("IdProveedor");
 
-                    b.Property<long>("IdUsuarioCreador");
+                    b.Property<long?>("IdUsuarioCreador");
 
                     b.Property<long?>("IdUsuarioModificador");
 
@@ -247,40 +277,6 @@ namespace RestApiSigedi.Migrations
                     b.HasIndex("IdPrecio");
 
                     b.ToTable("IngresoDetalles");
-                });
-
-            modelBuilder.Entity("rest_api_sigedi.Models.Movimiento", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("Activo");
-
-                    b.Property<bool>("Anulado");
-
-                    b.Property<string>("Descripcion");
-
-                    b.Property<long?>("Devolvio");
-
-                    b.Property<long>("IdEdicion");
-
-                    b.Property<long>("IdVendedor");
-
-                    b.Property<decimal?>("Importe");
-
-                    b.Property<long>("Llevo");
-
-                    b.Property<decimal>("Monto");
-
-                    b.Property<decimal>("Saldo");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdEdicion");
-
-                    b.HasIndex("IdVendedor");
-
-                    b.ToTable("Movimientos");
                 });
 
             modelBuilder.Entity("rest_api_sigedi.Models.Precio", b =>
@@ -477,14 +473,21 @@ namespace RestApiSigedi.Migrations
                         .WithMany()
                         .HasForeignKey("IdProveedor")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("rest_api_sigedi.Models.Usuario", "UsuarioCreador")
+                        .WithMany()
+                        .HasForeignKey("IdUsuarioCreador");
+
+                    b.HasOne("rest_api_sigedi.Models.Usuario", "UsuarioModificador")
+                        .WithMany()
+                        .HasForeignKey("IdUsuarioModificador");
                 });
 
             modelBuilder.Entity("rest_api_sigedi.Models.Distribucion", b =>
                 {
                     b.HasOne("rest_api_sigedi.Models.Usuario", "UsuarioCreador")
                         .WithMany()
-                        .HasForeignKey("IdUsuarioCreador")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("IdUsuarioCreador");
 
                     b.HasOne("rest_api_sigedi.Models.Usuario", "UsuarioModificador")
                         .WithMany()
@@ -506,11 +509,6 @@ namespace RestApiSigedi.Migrations
                     b.HasOne("rest_api_sigedi.Models.Edicion", "Edicion")
                         .WithMany()
                         .HasForeignKey("IdEdicion")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("rest_api_sigedi.Models.Movimiento", "Movimiento")
-                        .WithMany()
-                        .HasForeignKey("IdMovimiento")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
@@ -536,8 +534,7 @@ namespace RestApiSigedi.Migrations
 
                     b.HasOne("rest_api_sigedi.Models.Usuario", "UsuarioCreador")
                         .WithMany()
-                        .HasForeignKey("IdUsuarioCreador")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("IdUsuarioCreador");
 
                     b.HasOne("rest_api_sigedi.Models.Usuario", "UsuarioModificador")
                         .WithMany()
@@ -553,8 +550,7 @@ namespace RestApiSigedi.Migrations
 
                     b.HasOne("rest_api_sigedi.Models.Usuario", "UsuarioCreador")
                         .WithMany()
-                        .HasForeignKey("IdUsuarioCreador")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("IdUsuarioCreador");
 
                     b.HasOne("rest_api_sigedi.Models.Usuario", "UsuarioModificador")
                         .WithMany()
@@ -582,19 +578,6 @@ namespace RestApiSigedi.Migrations
                         .WithMany()
                         .HasForeignKey("IdPrecio")
                         .OnDelete(DeleteBehavior.Restrict);
-                });
-
-            modelBuilder.Entity("rest_api_sigedi.Models.Movimiento", b =>
-                {
-                    b.HasOne("rest_api_sigedi.Models.Edicion", "Edicion")
-                        .WithMany()
-                        .HasForeignKey("IdEdicion")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("rest_api_sigedi.Models.Vendedor", "Vendedor")
-                        .WithMany()
-                        .HasForeignKey("IdVendedor")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("rest_api_sigedi.Models.Precio", b =>
