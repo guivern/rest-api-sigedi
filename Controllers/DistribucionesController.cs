@@ -116,6 +116,39 @@ namespace rest_api_sigedi.Controllers
                 }
             }
         }
+    
+        public override async Task<IActionResult> Desactivar(long id)
+        {
+            var distribucion = await _context.Distribuciones
+            .Include(d => d.Detalle)
+            .SingleOrDefaultAsync(d => d.Id == id);
+
+            if(distribucion == null) return NotFound();
+            if(!distribucion.Anulable) return BadRequest();
+
+            // se anula la distribucion
+            distribucion.Anulado = true;
+            distribucion.Editable = false;
+            distribucion.Anulable = false;
+            _context.Distribuciones.Update(distribucion);
+
+            foreach(var d in distribucion.Detalle)
+            {
+                // se repone el stock correspondiente al detalle
+                var edicion = await _context.Ediciones.SingleOrDefaultAsync(e => e.Id == d.IdEdicion);
+                edicion.CantidadActual += d.Cantidad;
+                _context.Ediciones.Update(edicion);
+                
+                //se anula el detalle
+                d.Anulado = true;
+                d.Editable = false;
+                d.Anulable = false;
+                _context.DistribucionDetalles.Update(d);
+            }
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
     }
 
     public class DistribucionDto : DtoConDetalle<DistribucionDetalleDto>
