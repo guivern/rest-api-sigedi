@@ -14,6 +14,9 @@ namespace rest_api_sigedi.Models
         public long IdProveedor {get; set;}
         public string TipoComprobante {get; set;}
         public string NumeroComprobante {get; set;}
+        public bool Anulable {get; set;} = true;
+        public bool Editable {get; set;} = true;
+        public bool Anulado {get; set;} = false;
 
         [NotMapped]
         public string NombreProveedor => Proveedor?.RazonSocial;

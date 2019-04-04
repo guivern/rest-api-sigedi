@@ -115,6 +115,37 @@ namespace rest_api_sigedi.Controllers
                     }
                 }
             }
+            foreach (var detalleDto in dto.Detalle)
+            {
+                //obtenemos la lista de ingreso detalle con esa edicion
+                var ingresoDet = await _context.IngresoDetalles
+                .Include(e => e.Edicion)
+                .Where(e => e.IdEdicion == detalleDto.IdEdicion && e.Anulable == true)
+                .ToListAsync();
+
+                //recorremos la lista de los detalles
+                foreach (var ingresoLista in ingresoDet)
+                {
+                    //obtenemos el ingreso
+                    var ingreso = await _context.Ingresos
+                    .Include(d => d.Detalle)
+                    .Where(i => i.Id == ingresoLista.IdIngreso)
+                    .SingleOrDefaultAsync();
+
+                    ingresoLista.Anulable = false;
+                    ingresoLista.Editable = false;
+
+                    _context.IngresoDetalles.Update(ingresoLista);
+                    await _context.SaveChangesAsync();
+                    
+                    ingreso.Anulable = false;
+                    ingreso.Editable = false;
+
+                    _context.Ingresos.Update(ingreso);
+                    await _context.SaveChangesAsync();
+
+                }
+            }
         }
     
         public override async Task<IActionResult> Desactivar(long id)

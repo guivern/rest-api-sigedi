@@ -33,8 +33,37 @@ namespace rest_api_sigedi.Controllers
             .FindAsync(dto.Id);
 
             if (edicion == null) return NotFound();
-            //creamos un egreso
             
+        
+            //obtenemos la lista de los detalles que tengan esa edicion
+            var ingresoDet = await _context.IngresoDetalles
+                .Include(e => e.Edicion)
+                .Where(e => e.IdEdicion == dto.Id && e.Anulable == true)
+            .ToListAsync();
+            
+            //recorremos la lista de los detalles
+            foreach (var ingresoLista in ingresoDet)
+            {
+                //obtenemos el ingreso
+                var ingreso = await _context.Ingresos
+                .Include(d => d.Detalle)
+                .Where(i => i.Id == ingresoLista.IdIngreso)
+                .SingleOrDefaultAsync();
+      
+                ingreso.Anulable = false;
+                _context.Ingresos.Update(ingreso);
+                await _context.SaveChangesAsync();
+
+                //cambiamos en los detalles ingreso los estados
+                ingresoLista.Anulable = false;
+                ingresoLista.Editable = false;
+
+                 _context.IngresoDetalles.Update(ingresoLista);
+                await _context.SaveChangesAsync();
+            }
+
+
+            //creamos un egreso
             var nuevoEgreso = new Egreso();
             nuevoEgreso.IdEdicion = edicion.Id;
             nuevoEgreso.Cantidad = edicion.CantidadActual;

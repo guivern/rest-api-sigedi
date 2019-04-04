@@ -88,6 +88,13 @@ namespace rest_api_sigedi.Controllers
             .SingleOrDefaultAsync();
 
             if (ingreso == null) return NotFound();
+            if(!ingreso.Anulable) return BadRequest();
+
+            //se anula el ingreso
+            ingreso.Anulado = true;
+            ingreso.Editable = false;
+            ingreso.Anulable = false;
+            _context.Ingresos.Update(ingreso);
 
             foreach (var detalle in ingreso.Detalle)
             {
@@ -99,6 +106,13 @@ namespace rest_api_sigedi.Controllers
                 edicion.CantidadActual -= detalle.Cantidad;
                 edicion.CantidadInicial -= detalle.Cantidad;
 
+                //se anula el detalle
+                detalle.Anulado = true;
+                detalle.Editable = false;
+                detalle.Anulable = false;
+                _context.IngresoDetalles.Update(detalle);
+                await _context.SaveChangesAsync();
+
                 if (edicion.CantidadInicial == 0)
                 { // fue el ultimo ingreso anulado o el unico ingreso
                     edicion.Activo = false;
@@ -108,7 +122,7 @@ namespace rest_api_sigedi.Controllers
                 }
             }
             
-            ingreso.Activo = false;
+            //ingreso.Activo = false;
             if (IsAuditEntity)
             {
                 ingreso.FechaUltimaModificacion = DateTime.Now;
@@ -128,6 +142,8 @@ namespace rest_api_sigedi.Controllers
         public long? IdUsuarioCreador { get; set; }
         public string TipoComprobante { get; set; }
         public string NumeroComprobante { get; set; }
+        public bool? Anulable { get; set; } = true;
+        public bool? Editable { get; set; } = false;
     }
 
     public class IngresoDetalleDto : DtoBase
@@ -144,6 +160,8 @@ namespace rest_api_sigedi.Controllers
         public DateTime? FechaEdicion { get; set; }
         [Requerido]
         public long? NroEdicion { get; set; }
+        public bool? Anulable { get; set; } = true;
+        public bool? Editable { get; set; } = true;
 
     }
 
