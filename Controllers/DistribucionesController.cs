@@ -25,20 +25,40 @@ namespace rest_api_sigedi.Controllers
             }
 
             //verificamos que la cantidad ingresada no supere el stock
+            
             var index = 0;
             foreach (var detalle in dto.Detalle)
             {
-                var edicion = await _context.Ediciones
+                if(detalle.Id == null){
+                    var edicion = await _context.Ediciones
+                        .Where(e => e.Id == detalle.IdEdicion)
+                        .SingleOrDefaultAsync();
+
+                    if (detalle.Cantidad > edicion.CantidadActual)
+                    {
+                        ModelState.AddModelError(
+                        $"Detalle[{index}].Cantidad", "Excede el stock");
+                    }
+                    index++;
+                }else{
+                    var edicion = await _context.Ediciones
                     .Where(e => e.Id == detalle.IdEdicion)
                     .SingleOrDefaultAsync();
 
-                if (detalle.Cantidad > edicion.CantidadActual)
-                {
-                    ModelState.AddModelError(
-                    $"Detalle[{index}].Cantidad", "Excede el stock");
+                    var detalleDb = await _context.DistribucionDetalles
+                        .Where(d => d.Id == detalle.Id)
+                        .SingleOrDefaultAsync();
+
+                    var cantidad =  detalle.Cantidad - detalleDb.Cantidad;
+                    if(cantidad > edicion.CantidadActual){
+                        ModelState.AddModelError(
+                        $"Detalle[{index}].Cantidad", "Excede el stock");
+                    }
+                    index++;
+
                 }
-                index++;
             }
+
             return ModelState.IsValid;
         }
 
@@ -81,7 +101,7 @@ namespace rest_api_sigedi.Controllers
                 {   // es un detalle existente
                     // obtenemos el detalle
                     var detalleDb = await _context.DistribucionDetalles.FindAsync(detalleDto.Id);
-                    edicion.CantidadActual -= (long)detalleDto.Cantidad - detalleDb.Cantidad;
+                    edicion.CantidadActual -=  (long)detalleDto.Cantidad - detalleDb.Cantidad;
                 }
 
                 _context.Ediciones.Update(edicion);
@@ -113,6 +133,37 @@ namespace rest_api_sigedi.Controllers
                         _context.Ediciones.Update(edicion);
                         await _context.SaveChangesAsync();
                     }
+                }
+            }
+            foreach (var detalleDto in dto.Detalle)
+            {
+                //obtenemos la lista de ingreso detalle con esa edicion
+                var ingresoDet = await _context.IngresoDetalles
+                .Include(e => e.Edicion)
+                .Where(e => e.IdEdicion == detalleDto.IdEdicion && e.Anulable == true)
+                .ToListAsync();
+
+                //recorremos la lista de los detalles
+                foreach (var ingresoLista in ingresoDet)
+                {
+                    //obtenemos el ingreso
+                    var ingreso = await _context.Ingresos
+                    .Include(d => d.Detalle)
+                    .Where(i => i.Id == ingresoLista.IdIngreso)
+                    .SingleOrDefaultAsync();
+
+                    ingresoLista.Anulable = false;
+                    ingresoLista.Editable = false;
+
+                    _context.IngresoDetalles.Update(ingresoLista);
+                    await _context.SaveChangesAsync();
+                    
+                    ingreso.Anulable = false;
+                    
+
+                    _context.Ingresos.Update(ingreso);
+                    await _context.SaveChangesAsync();
+
                 }
             }
         }

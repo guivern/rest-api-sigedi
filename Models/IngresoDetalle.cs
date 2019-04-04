@@ -34,6 +34,10 @@ namespace rest_api_sigedi.Models
         public DateTime? FechaEdicion {get; set;}
         public long NroEdicion {get; set;}
 
+        public bool Anulable {get; set;} = true;
+        public bool Editable {get; set;} = true;
+        public bool Anulado {get; set;} = false;
+
         [NotMapped]
         public String NombreArticulo => Articulo?.Descripcion;
 
