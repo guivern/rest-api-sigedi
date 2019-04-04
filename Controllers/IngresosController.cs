@@ -40,6 +40,7 @@ namespace rest_api_sigedi.Controllers
                     .ThenInclude(d => d.Precio);
         }
 
+        
         public override async Task<IActionResult> Create(IngresoDto dto)
         {
             
@@ -75,6 +76,98 @@ namespace rest_api_sigedi.Controllers
 
             return await base.Create(dto);
         }
+
+        [HttpPut("{id}")]
+        public override async Task<IActionResult> Update(long id, IngresoDto dto)
+        {
+            
+            foreach (var detalleDto in dto.Detalle){
+
+                // obtenemos la edicion del detalle
+                var edicion = await _context.Ediciones
+                .Where(e => e.IdArticulo == detalleDto.IdArticulo && e.NroEdicion == detalleDto.NroEdicion && e.FechaEdicion == detalleDto.FechaEdicion)
+                .SingleOrDefaultAsync();
+                
+                
+                //actualizamos stock
+                if (detalleDto.Id == null)
+                {   
+                    if(edicion == null){
+                        // generamos una nueva edicion
+                        Edicion nuevaEdicion = _mapper.Map<Edicion>(detalleDto);
+                        await _context.Ediciones.AddAsync(nuevaEdicion);
+                        await _context.SaveChangesAsync();
+                        //asignamos idEdicion al detalle
+                        detalleDto.IdEdicion = nuevaEdicion.Id;
+                    }
+                    else{
+                        
+                        edicion.CantidadActual += (long)detalleDto.Cantidad;
+                        edicion.CantidadInicial += (long)detalleDto.Cantidad;
+                        edicion.Activo = true;
+                        edicion.Anulado = false;
+                        _context.Ediciones.Update(edicion);
+                        await _context.SaveChangesAsync();
+                        detalleDto.IdEdicion = edicion.Id;
+                    }   
+                     
+                }
+                else
+                {   // es un detalle existente
+                    // obtenemos el detalle
+                    var detalleDb = await _context.IngresoDetalles.FindAsync(detalleDto.Id);
+                    edicion.CantidadActual += (long)detalleDto.Cantidad - detalleDb.Cantidad;
+                    edicion.CantidadInicial += (long)detalleDto.Cantidad - detalleDb.Cantidad;
+                    _context.Ediciones.Update(edicion);
+                    await _context.SaveChangesAsync();
+                }
+                
+            }
+            return await base.Update(id,dto);
+            
+        }
+        
+        protected override async Task ExecuteBeforeSave(IngresoDto dto)
+        {
+            
+            // verificamos los detalles eliminados para reponer stock
+            if (dto.Id != null)
+            {
+                
+                var detallesDb = await _context.IngresoDetalles
+                .Where(d => d.IdIngreso == dto.Id)
+                .ToListAsync();
+
+                foreach (var detDb in detallesDb)
+                {
+                    var seElimina = true;
+                    foreach (var detDto in dto.Detalle)
+                    {
+                        if (detDb.Id == detDto.Id)
+                        {
+                            seElimina = false;
+                        }
+                    }
+                    if (seElimina)
+                    {
+                        var edicion = await _context.Ediciones
+                        .SingleOrDefaultAsync(e => e.Id == detDb.IdEdicion);
+                        edicion.CantidadActual -= detDb.Cantidad;
+                        edicion.CantidadInicial -= detDb.Cantidad;
+                        if(edicion.CantidadInicial == 0){
+                            edicion.Activo = false;
+                            edicion.Anulado = true;
+                        }
+                        _context.Ediciones.Update(edicion);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+            }
+
+        }
+
+
 
         protected override async Task ExecutePostSave(IngresoDto dto)
         {}
