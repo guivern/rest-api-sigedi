@@ -236,7 +236,7 @@ namespace rest_api_sigedi.Controllers
         public string TipoComprobante { get; set; }
         public string NumeroComprobante { get; set; }
         public bool? Anulable { get; set; } = true;
-        public bool? Editable { get; set; } = false;
+        public bool? Editable { get; set; } = true;
     }
 
     public class IngresoDetalleDto : DtoBase

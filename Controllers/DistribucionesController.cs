@@ -159,7 +159,7 @@ namespace rest_api_sigedi.Controllers
                     await _context.SaveChangesAsync();
                     
                     ingreso.Anulable = false;
-                    ingreso.Editable = false;
+                    
 
                     _context.Ingresos.Update(ingreso);
                     await _context.SaveChangesAsync();
