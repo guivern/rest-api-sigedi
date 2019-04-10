@@ -77,6 +77,18 @@ namespace rest_api_sigedi.Models
             .HasOne(dd => dd.Edicion)
             .WithMany()
             .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RendicionDetalle>()
+            .HasOne(rd => rd.Rendicion)
+            .WithMany(r => r.Detalle)
+            .HasForeignKey(rd => rd.IdRendicion)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RendicionDetalle>()
+            .HasOne(rd => rd.DistribucionDetalle)
+            .WithMany()
+            .OnDelete(DeleteBehavior.Restrict);
+
         }
 
         public DbSet<Usuario> Usuarios {get; set;}
@@ -92,5 +104,7 @@ namespace rest_api_sigedi.Models
         public DbSet<Egreso> Egresos {get; set;}
         public DbSet<Distribucion> Distribuciones {get; set;}
         public DbSet<DistribucionDetalle> DistribucionDetalles {get; set;}
+        public DbSet<Rendicion> Rendiciones {get; set;}
+        public DbSet<RendicionDetalle> RendicionDetalles {get; set;}
     }
 }
