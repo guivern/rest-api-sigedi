@@ -200,6 +200,21 @@ namespace rest_api_sigedi.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+    
+        [HttpGet("detalle/vendedor/{idVendedor}")]
+        public async Task<IActionResult> GetDetalleByVendedor(long idVendedor)
+        {
+            var vendedor = await _context.Vendedores.FindAsync(idVendedor);
+            if(vendedor == null) return NotFound();
+
+            var distribuciones = _context.DistribucionDetalles
+            .Include(d => d.Distribucion)
+            .Include(d => d.Edicion).ThenInclude(e => e.Articulo)
+            .Include(d => d.Edicion).ThenInclude(e => e.Precio)
+            .Where(d => d.Distribucion.IdVendedor == idVendedor && d.Activo && !d.Anulado);
+
+            return Ok(distribuciones);
+        }
     }
 
     public class DistribucionDto : DtoConDetalle<DistribucionDetalleDto>
