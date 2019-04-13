@@ -86,23 +86,26 @@ namespace rest_api_sigedi.Controllers
 
         protected override async Task ExecutePostSave(RendicionDto dto)
         {
-            //Traemos la distribucion
-            var distribucion = await _context.Distribuciones
-            .Where(d => d.Id == dto.IdDistribucion)
-            .SingleOrDefaultAsync();
-
-            //Una vez que se haga una rendicion la distribucion no se puede anular
-            distribucion.Anulable = false;
-            distribucion.Editable = false;
-            _context.Distribuciones.Update(distribucion);
-            await _context.SaveChangesAsync();
+            
 
             foreach (var detalle in dto.Detalle)
             {
                 //Traemos el detalle de la distribucion correspondiente 
                 var distribucionDet = await _context.DistribucionDetalles
-                .Where(r => r.IdDistribucion == dto.IdDistribucion && r.Id == detalle.IdDistribucionDetalle)
+                .Where(r => r.Id == detalle.IdDistribucionDetalle)
                 .SingleOrDefaultAsync();
+
+                //Traemos la distribucion
+                var distribucion = await _context.Distribuciones
+                .Where(d => d.Id == distribucionDet.IdDistribucion)
+                .SingleOrDefaultAsync();
+
+                //Una vez que se haga una rendicion la distribucion no se puede anular
+                distribucion.Anulable = false;
+                distribucion.Editable = false;
+                _context.Distribuciones.Update(distribucion);
+                await _context.SaveChangesAsync();
+                
 
                 distribucionDet.Anulable = false;
                 distribucionDet.Editable = false;
@@ -158,8 +161,6 @@ namespace rest_api_sigedi.Controllers
     {
         [Requerido]
         public long? IdVendedor { get; set; }
-        [Requerido]
-        public long? IdDistribucion { get; set; }
         [Requerido]
         public long? IdUsuarioCreador { get; set; }
         public long? IdUsuarioModificador { get; set; }
