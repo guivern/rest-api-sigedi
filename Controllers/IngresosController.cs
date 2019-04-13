@@ -250,6 +250,7 @@ namespace rest_api_sigedi.Controllers
         public long? IdEdicion { get; set; } = null;
         [Requerido]
         [NoNegativo]
+        [MayorACero]
         public long Cantidad { get; set; }
         [Requerido]
         public DateTime? FechaEdicion { get; set; }
