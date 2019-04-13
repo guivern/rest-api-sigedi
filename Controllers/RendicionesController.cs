@@ -174,8 +174,10 @@ namespace rest_api_sigedi.Controllers
         [Requerido]
         public long? IdDistribucionDetalle { get; set; }
         [NoNegativo]
+        [Requerido]
         public long? Devoluciones {get; set;}
         public decimal? Monto { get; set; } 
+        [Requerido]
         public decimal? Importe { get; set; }
         public decimal? Saldo { get; set; } 
     }
