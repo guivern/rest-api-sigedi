@@ -10,7 +10,7 @@ using rest_api_sigedi.Models;
 namespace RestApiSigedi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20190410141833_Rendiciones")]
+    [Migration("20190413195605_Rendiciones")]
     partial class Rendiciones
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -364,8 +364,6 @@ namespace RestApiSigedi.Migrations
 
                     b.Property<DateTime?>("FechaUltimaModificacion");
 
-                    b.Property<long>("IdDistribucion");
-
                     b.Property<long?>("IdUsuarioCreador");
 
                     b.Property<long?>("IdUsuarioModificador");
@@ -383,8 +381,6 @@ namespace RestApiSigedi.Migrations
                     b.Property<string>("TipoComprobante");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("IdDistribucion");
 
                     b.HasIndex("IdUsuarioCreador");
 
@@ -676,11 +672,6 @@ namespace RestApiSigedi.Migrations
 
             modelBuilder.Entity("rest_api_sigedi.Models.Rendicion", b =>
                 {
-                    b.HasOne("rest_api_sigedi.Models.Distribucion", "Distribucion")
-                        .WithMany()
-                        .HasForeignKey("IdDistribucion")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("rest_api_sigedi.Models.Usuario", "UsuarioCreador")
                         .WithMany()
                         .HasForeignKey("IdUsuarioCreador");

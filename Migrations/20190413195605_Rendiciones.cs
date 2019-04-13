@@ -21,7 +21,6 @@ namespace RestApiSigedi.Migrations
                     FechaCreacion = table.Column<DateTime>(nullable: false),
                     FechaUltimaModificacion = table.Column<DateTime>(nullable: true),
                     IdVendedor = table.Column<long>(nullable: false),
-                    IdDistribucion = table.Column<long>(nullable: false),
                     MontoTotal = table.Column<decimal>(nullable: false),
                     ImporteTotal = table.Column<decimal>(nullable: false),
                     SaldoTotal = table.Column<decimal>(nullable: false),
@@ -31,12 +30,6 @@ namespace RestApiSigedi.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Rendiciones", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Rendiciones_Distribuciones_IdDistribucion",
-                        column: x => x.IdDistribucion,
-                        principalTable: "Distribuciones",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Rendiciones_Usuarios_IdUsuarioCreador",
                         column: x => x.IdUsuarioCreador,
@@ -98,11 +91,6 @@ namespace RestApiSigedi.Migrations
                 name: "IX_RendicionDetalles_IdRendicion",
                 table: "RendicionDetalles",
                 column: "IdRendicion");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Rendiciones_IdDistribucion",
-                table: "Rendiciones",
-                column: "IdDistribucion");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Rendiciones_IdUsuarioCreador",

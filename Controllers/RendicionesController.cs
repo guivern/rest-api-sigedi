@@ -68,7 +68,6 @@ namespace rest_api_sigedi.Controllers
         {
             return query
             .Include(r => r.Vendedor)
-            .Include(r => r.Distribucion)
             .Include(r => r.UsuarioCreador);
         }
 
