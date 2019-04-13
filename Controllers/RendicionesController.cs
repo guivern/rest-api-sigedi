@@ -26,21 +26,12 @@ namespace rest_api_sigedi.Controllers
             }
             
             var index = 0;
-            
             foreach (var detalle in dto.Detalle)
             {
-
                 var distribucionDet =  await _context.DistribucionDetalles
                 .Where(d => d.Id == detalle.IdDistribucionDetalle)
                 .SingleOrDefaultAsync();
-                /* 
-                //Importe debe ser menor o igual que el saldo
-                if(detalle.Importe > detalle.Saldo)
-                {
-                    ModelState.AddModelError(
-                    $"Detalle[{index}].Importe", "El importe supera al saldo");
-                }*/
-
+              
                 //Devolucion no puede ser mayor a la cantidad distribuida
                 if(detalle.Devoluciones > distribucionDet.Cantidad)
                 {
@@ -69,11 +60,10 @@ namespace rest_api_sigedi.Controllers
                     $"Detalle[{index}].Importe", "El importe supera al saldo");
                 }
                 index++;
-
             }
            return ModelState.IsValid;
-
         }
+
         protected override IQueryable<Rendicion> IncludeListFields(IQueryable<Rendicion> query)
         {
             return query
@@ -104,12 +94,13 @@ namespace rest_api_sigedi.Controllers
 
             //Una vez que se haga una rendicion la distribucion no se puede anular
             distribucion.Anulable = false;
+            distribucion.Editable = false;
             _context.Distribuciones.Update(distribucion);
             await _context.SaveChangesAsync();
 
             foreach (var detalle in dto.Detalle)
             {
-                 //Traemos el detalle de la distribucion correspondiente 
+                //Traemos el detalle de la distribucion correspondiente 
                 var distribucionDet = await _context.DistribucionDetalles
                 .Where(r => r.IdDistribucion == dto.IdDistribucion && r.Id == detalle.IdDistribucionDetalle)
                 .SingleOrDefaultAsync();
@@ -130,13 +121,13 @@ namespace rest_api_sigedi.Controllers
                     //Se actualizan los campos en distribuciones, segun la cantidad devuelta y pagada
                     distribucionDet.Saldo -= (decimal) detalle.Devoluciones * edicion.Precio.PrecioRendVendedor;
                     distribucionDet.Monto -= (decimal) detalle.Devoluciones * edicion.Precio.PrecioRendVendedor;
-                    distribucionDet.Importe += detalle.Importe;
+                    distribucionDet.Importe += (decimal) detalle.Importe;
                     distribucionDet.Saldo -= (decimal) detalle.Importe;
                     distribucionDet.Devoluciones += detalle.Devoluciones;
                     _context.DistribucionDetalles.Update(distribucionDet);
                     await _context.SaveChangesAsync();
 
-                     //Se actualiza  stock con cantidad devuelta
+                    //Se actualiza  stock con cantidad devuelta
                     edicion.CantidadActual += (long)detalle.Devoluciones;
                     edicion.Activo = true;
                     edicion.Anulado = false;
@@ -162,18 +153,6 @@ namespace rest_api_sigedi.Controllers
                 }
             }
         }
-
-        public override async Task<IActionResult> Create(RendicionDto dto)
-        {
-            foreach (var detalle in dto.Detalle)
-            {
-                dto.MontoTotal += detalle.Monto;
-                dto.ImporteTotal += detalle.Importe;
-                dto.SaldoTotal += detalle.Saldo;
-            }
-            return await base.Create(dto);
-        }
-        
     }
 
     public class RendicionDto : DtoConDetalle<RendicionDetalleDto>
