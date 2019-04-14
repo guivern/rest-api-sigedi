@@ -82,32 +82,33 @@ namespace rest_api_sigedi.Controllers
 
         protected override async Task ExecuteBeforeSave(DistribucionDto dto)
         {
-            foreach (var detalleDto in dto.Detalle)
-            {
-                // obtenemos la edicion del detalle
-                var edicion = await _context.Ediciones
-                .Include(e => e.Precio)
-                .SingleOrDefaultAsync(e => e.Id == detalleDto.IdEdicion);
+            if(dto.Editable == true){
+                foreach (var detalleDto in dto.Detalle)
+                {
+                    // obtenemos la edicion del detalle
+                    var edicion = await _context.Ediciones
+                    .Include(e => e.Precio)
+                    .SingleOrDefaultAsync(e => e.Id == detalleDto.IdEdicion);
 
-                // calculamos monto y saldo 
-                detalleDto.Monto = detalleDto.Saldo = detalleDto.Cantidad * edicion.Precio.PrecioRendVendedor;
+                    // calculamos monto y saldo 
+                    detalleDto.Monto = detalleDto.Saldo = detalleDto.Cantidad * edicion.Precio.PrecioRendVendedor;
 
-                //actualizamos stock
-                if (detalleDto.Id == null)
-                {   // es un nuevo detalle
-                    edicion.CantidadActual -= (long)detalleDto.Cantidad;
+                    //actualizamos stock
+                    if (detalleDto.Id == null)
+                    {   // es un nuevo detalle
+                        edicion.CantidadActual -= (long)detalleDto.Cantidad;
+                    }
+                    else
+                    {   // es un detalle existente
+                        // obtenemos el detalle
+                        var detalleDb = await _context.DistribucionDetalles.FindAsync(detalleDto.Id);
+                        edicion.CantidadActual -=  (long)detalleDto.Cantidad - detalleDb.Cantidad;
+                    }
+
+                    _context.Ediciones.Update(edicion);
+                    await _context.SaveChangesAsync();
                 }
-                else
-                {   // es un detalle existente
-                    // obtenemos el detalle
-                    var detalleDb = await _context.DistribucionDetalles.FindAsync(detalleDto.Id);
-                    edicion.CantidadActual -=  (long)detalleDto.Cantidad - detalleDb.Cantidad;
-                }
-
-                _context.Ediciones.Update(edicion);
-                await _context.SaveChangesAsync();
             }
-
             // verificamos los detalles eliminados para reponer stock
             if (dto.Id != null)
             {
