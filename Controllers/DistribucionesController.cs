@@ -82,9 +82,11 @@ namespace rest_api_sigedi.Controllers
 
         protected override async Task ExecuteBeforeSave(DistribucionDto dto)
         {
-            if(dto.Editable == true){
-                foreach (var detalleDto in dto.Detalle)
-                {
+            
+            foreach (var detalleDto in dto.Detalle)
+            {
+                if(detalleDto.Editable == true){
+                    
                     // obtenemos la edicion del detalle
                     var edicion = await _context.Ediciones
                     .Include(e => e.Precio)
@@ -109,6 +111,7 @@ namespace rest_api_sigedi.Controllers
                     await _context.SaveChangesAsync();
                 }
             }
+          
             // verificamos los detalles eliminados para reponer stock
             if (dto.Id != null)
             {
