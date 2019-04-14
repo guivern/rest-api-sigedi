@@ -34,6 +34,8 @@ namespace rest_api_sigedi.Models
         [NotMapped]
         public long? NroEdicion => DistribucionDetalle?.Edicion?.NroEdicion; 
         [NotMapped]
+        public long? Cantidad => DistribucionDetalle?.Cantidad;
+        [NotMapped]
         public String NombreArticulo => DistribucionDetalle?.Edicion?.Articulo?.Descripcion;
         [NotMapped]
         public Decimal? PrecioVenta => DistribucionDetalle?.Edicion?.Precio?.PrecioVenta; 
