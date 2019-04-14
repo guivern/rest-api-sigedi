@@ -233,7 +233,9 @@ namespace rest_api_sigedi.Controllers
         public long? IdProveedor { get; set; }
         [Requerido]
         public long? IdUsuarioCreador { get; set; }
+        [Requerido]
         public string TipoComprobante { get; set; }
+        [Requerido]
         public string NumeroComprobante { get; set; }
         public bool? Anulable { get; set; } = true;
         public bool? Editable { get; set; } = true;
@@ -248,6 +250,7 @@ namespace rest_api_sigedi.Controllers
         public long? IdEdicion { get; set; } = null;
         [Requerido]
         [NoNegativo]
+        [MayorACero]
         public long Cantidad { get; set; }
         [Requerido]
         public DateTime? FechaEdicion { get; set; }
