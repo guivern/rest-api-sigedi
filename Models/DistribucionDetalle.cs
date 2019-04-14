@@ -39,6 +39,8 @@ namespace rest_api_sigedi.Models
 
         public bool Anulado {get; set;} = false;
 
+        public bool? YaSeDevolvio {get; set;} = false;
+
         /* El atributo Activo cuando es:
             True: Indica que aún no se cancelo, es decir, saldo > 0
             False: Indica que ya se cancelo distribucion, saldo == 0

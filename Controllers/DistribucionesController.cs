@@ -244,5 +244,6 @@ namespace rest_api_sigedi.Controllers
         public decimal? Saldo { get; set; } // seteamos en el controller
         public bool? Anulable { get; set; } = true;
         public bool? Editable { get; set; } = true;
+        public bool? YaSeDevolvio { get; set; } = false;
     }
 }
