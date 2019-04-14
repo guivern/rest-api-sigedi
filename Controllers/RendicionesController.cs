@@ -109,6 +109,7 @@ namespace rest_api_sigedi.Controllers
 
                 distribucionDet.Anulable = false;
                 distribucionDet.Editable = false;
+                distribucionDet.YaSeDevolvio = true;
 
                 if(detalle.Devoluciones >0)
                 {
