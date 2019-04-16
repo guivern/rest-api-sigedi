@@ -67,9 +67,10 @@ namespace rest_api_sigedi.Controllers
                     edicion.CantidadActual += detalle.Cantidad;
                     edicion.Activo = true;
                     edicion.Anulado = false;
+                    edicion.IdPrecio = (long) detalle.IdPrecio;
                     _context.Ediciones.Update(edicion);
                     await _context.SaveChangesAsync();
-                    //asignamos idEdicion al detalle
+                    //seteamos idEdicion en el detalle
                     detalle.IdEdicion = edicion.Id;
                 }
             }
