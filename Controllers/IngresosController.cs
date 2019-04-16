@@ -70,6 +70,14 @@ namespace rest_api_sigedi.Controllers
                     edicion.IdPrecio = (long) detalle.IdPrecio;
                     _context.Ediciones.Update(edicion);
                     await _context.SaveChangesAsync();
+                    //actualizamos precio en los ingresos anteriores de la misma edicion
+                    var ingresosAnteriores = await _context.IngresoDetalles.Where(i => i.IdEdicion == edicion.Id).ToListAsync();
+                    foreach (var ingreso in ingresosAnteriores)
+                    {
+                        ingreso.IdPrecio = (long)detalle.IdPrecio;
+                    }
+                    _context.IngresoDetalles.UpdateRange(ingresosAnteriores);
+                    await _context.SaveChangesAsync();
                     //seteamos idEdicion en el detalle
                     detalle.IdEdicion = edicion.Id;
                 }
