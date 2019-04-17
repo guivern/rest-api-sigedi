@@ -167,7 +167,6 @@ namespace rest_api_sigedi.Controllers
             if(!rendicion.Anulable) return BadRequest();
             
             // se anula la rendicion, cambiamos estado
-            //rendicion.Activo = false;
             rendicion.Anulado = true;
             rendicion.Anulable = false;
             _context.Rendiciones.Update(rendicion);
@@ -180,7 +179,6 @@ namespace rest_api_sigedi.Controllers
                 .SingleOrDefaultAsync(d => d.Id == detalleRen.IdDistribucionDetalle);
 
                 //cambiar estado
-                //detalleRen.Activo = false;
                 detalleRen.Anulado = true;
                 detalleRen.Anulable = false;
 
