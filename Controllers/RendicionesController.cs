@@ -156,6 +156,80 @@ namespace rest_api_sigedi.Controllers
                 }
             }
         }
+
+        public override async Task<IActionResult> Desactivar(long id)
+        {
+            var rendicion = await _context.Rendiciones
+            .Include(d => d.Detalle)
+            .SingleOrDefaultAsync(d => d.Id == id);
+
+            if(rendicion == null) return NotFound();
+            
+            // se anula la rendicion, cambiamos estado
+            rendicion.Activo = false;
+            _context.Rendiciones.Update(rendicion);
+            await _context.SaveChangesAsync();
+            
+            foreach(var detalleRen in rendicion.Detalle){
+
+                //traemos distribucionDetalle correspondiente
+                var distribucionDet = await _context.DistribucionDetalles
+                .SingleOrDefaultAsync(d => d.Id == detalleRen.IdDistribucionDetalle);
+
+                //cambiar estado
+                detalleRen.Activo = false;
+
+                //cuando el importe en la distribucion llegue a 0 y no tenga devoluciones se resetea
+                if(distribucionDet.Importe == detalleRen.Importe &&
+                distribucionDet.Devoluciones == detalleRen.Devoluciones){
+
+                    distribucionDet.YaSeDevolvio = false;
+                    distribucionDet.Editable = true;
+                    distribucionDet.Anulable = true;
+                    
+                    var distribucion = await _context.Distribuciones
+                    .SingleOrDefaultAsync(d => d.Id == distribucionDet.IdDistribucion);
+
+                    distribucion.Editable = true;
+                    distribucion.Anulable = true;
+
+                    _context.Distribuciones.Update(distribucion);
+                    await _context.SaveChangesAsync();
+                }
+                if(detalleRen.Devoluciones > 0){
+                    //si hubo rendiciones
+                    distribucionDet.Devoluciones -= (long) detalleRen.Devoluciones;
+                    
+                    //traemos la edicion para recalcular el monto y la cantidad en edicion
+                    //Edicion a reponer
+                    var edicion = await _context.Ediciones
+                    .Include(e => e.Precio)
+                    .Where(e => e.Id == distribucionDet.IdEdicion)
+                    .SingleOrDefaultAsync();
+
+                    edicion.CantidadActual -= (long) detalleRen.Devoluciones;
+                    distribucionDet.Saldo += (decimal) detalleRen.Devoluciones * edicion.Precio.PrecioRendVendedor;
+                    distribucionDet.Monto += (decimal) detalleRen.Devoluciones * edicion.Precio.PrecioRendVendedor;
+                    distribucionDet.Importe -= (decimal) detalleRen.Importe;
+                    distribucionDet.Saldo += (decimal) detalleRen.Importe;
+                    distribucionDet.Activo = true;
+                    _context.Ediciones.Update(edicion);
+                    await _context.SaveChangesAsync();
+
+                }else{
+
+                    //si no hubo devoluciones
+                    distribucionDet.Saldo += detalleRen.Importe;
+                    distribucionDet.Importe -= (decimal) detalleRen.Importe;
+                    distribucionDet.Activo = true;
+                }
+                _context.DistribucionDetalles.Update(distribucionDet);
+                await _context.SaveChangesAsync();
+
+            }
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
     }
 
     public class RendicionDto : DtoConDetalle<RendicionDetalleDto>
