@@ -164,9 +164,12 @@ namespace rest_api_sigedi.Controllers
             .SingleOrDefaultAsync(d => d.Id == id);
 
             if(rendicion == null) return NotFound();
+            if(!rendicion.Anulable) return BadRequest();
             
             // se anula la rendicion, cambiamos estado
-            rendicion.Activo = false;
+            //rendicion.Activo = false;
+            rendicion.Anulado = true;
+            rendicion.Anulable = false;
             _context.Rendiciones.Update(rendicion);
             await _context.SaveChangesAsync();
             
@@ -177,7 +180,9 @@ namespace rest_api_sigedi.Controllers
                 .SingleOrDefaultAsync(d => d.Id == detalleRen.IdDistribucionDetalle);
 
                 //cambiar estado
-                detalleRen.Activo = false;
+                //detalleRen.Activo = false;
+                detalleRen.Anulado = true;
+                detalleRen.Anulable = false;
 
                 //cuando el importe en la distribucion llegue a 0 y no tenga devoluciones se resetea
                 if(distribucionDet.Importe == detalleRen.Importe &&
@@ -242,6 +247,7 @@ namespace rest_api_sigedi.Controllers
         public decimal? MontoTotal { get; set; } = 0;
         public decimal? ImporteTotal { get; set; } = 0;
         public decimal? SaldoTotal { get; set; } = 0;
+        public bool? Anulable { get; set; } = true;
     }
 
     public class RendicionDetalleDto : DtoBase  
@@ -255,5 +261,6 @@ namespace rest_api_sigedi.Controllers
         [Requerido]
         public decimal? Importe { get; set; }
         public decimal? Saldo { get; set; } 
+        public bool? Anulable { get; set; } = true;
     }
 }

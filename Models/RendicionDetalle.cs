@@ -29,6 +29,9 @@ namespace rest_api_sigedi.Models
         [Required]
         public decimal Saldo {get; set;}
 
+        public bool Anulable {get; set;} = true;
+        public bool Anulado {get; set;} = false;
+
         [NotMapped]
         public DateTime? FechaEdicion => DistribucionDetalle?.Edicion?.FechaEdicion;
         [NotMapped]
