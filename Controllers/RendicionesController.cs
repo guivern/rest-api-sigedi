@@ -260,5 +260,7 @@ namespace rest_api_sigedi.Controllers
         public decimal? Importe { get; set; }
         public decimal? Saldo { get; set; } 
         public bool? Anulable { get; set; } = true;
+        public decimal? PrecioVenta { get; set; }
+        public decimal? PrecioRendicion { get; set; }
     }
 }
