@@ -20,6 +20,9 @@ namespace rest_api_sigedi.Models
         public string TipoComprobante {get; set;}
         public string NroComprobante {get; set;}
 
+        public bool Anulable {get; set;} = true;
+        public bool Anulado {get; set;} = false;
+
 
         [NotMapped]
         public string NombreUsuario => UsuarioCreador?.Username;

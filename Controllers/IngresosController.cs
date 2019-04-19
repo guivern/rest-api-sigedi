@@ -143,6 +143,7 @@ namespace rest_api_sigedi.Controllers
                 }
                 
             }
+           
             return await base.Update(id,dto);
             
         }
@@ -188,9 +189,49 @@ namespace rest_api_sigedi.Controllers
         }
 
 
-
         protected override async Task ExecutePostSave(IngresoDto dto)
-        {}
+        {
+            //recorremos detalle
+            foreach (var detalle in dto.Detalle){
+
+                //traemos la edicion de ese 
+                
+                var edicion = await _context.Ediciones
+                .Include(p => p.Precio)
+                .Where(d => d.Id == detalle.IdEdicion)
+                .SingleOrDefaultAsync();
+                
+
+                //traemos distribucionDetalles con esa edicion y que sean editables
+                var distribucionDet = await _context.DistribucionDetalles
+                .Where(d => d.IdEdicion == edicion.Id && d.Editable ==true)
+                .ToListAsync();  
+
+                if (distribucionDet != null){
+                    foreach (var listaDistri in distribucionDet){
+                        
+                        var distribucion = await _context.Distribuciones
+                        .Where(d => d.Id == listaDistri.IdDistribucion)
+                        .SingleOrDefaultAsync();
+
+                        if(distribucion.Editable == true){
+
+                            //recalculamos el monto y el saldo
+                            listaDistri.Monto = listaDistri.Cantidad * edicion.Precio.PrecioRendVendedor;
+                            listaDistri.Saldo = listaDistri.Cantidad * edicion.Precio.PrecioRendVendedor;
+                            //actualizamos los precios
+                            listaDistri.PrecioRendicion = edicion.Precio.PrecioRendVendedor;
+                            listaDistri.PrecioVenta = edicion.Precio.PrecioVenta;
+
+                            
+                            _context.DistribucionDetalles.Update(listaDistri);
+                            await _context.SaveChangesAsync();
+                        }
+                        
+                    }
+                }
+            }
+        }
 
         [HttpPut("[action]/{id}")]
         public override async Task<IActionResult> Desactivar(long id)

@@ -29,6 +29,9 @@ namespace rest_api_sigedi.Models
         [Required]
         public decimal Saldo {get; set;}
 
+        public bool Anulable {get; set;} = true;
+        public bool Anulado {get; set;} = false;
+
         [NotMapped]
         public DateTime? FechaEdicion => DistribucionDetalle?.Edicion?.FechaEdicion;
         [NotMapped]
@@ -37,9 +40,8 @@ namespace rest_api_sigedi.Models
         public long? Cantidad => DistribucionDetalle?.Cantidad;
         [NotMapped]
         public String NombreArticulo => DistribucionDetalle?.Edicion?.Articulo?.Descripcion;
-        [NotMapped]
-        public Decimal? PrecioVenta => DistribucionDetalle?.Edicion?.Precio?.PrecioVenta; 
-        [NotMapped]
-        public Decimal? PrecioRendicion => DistribucionDetalle?.Edicion?.Precio?.PrecioRendVendedor; 
+        
+        public Decimal? PrecioVenta {get; set;}
+        public Decimal? PrecioRendicion {get; set;}
     }
 }

@@ -94,7 +94,7 @@ namespace rest_api_sigedi.Controllers
 
                     // calculamos monto y saldo 
                     detalleDto.Monto = detalleDto.Saldo = detalleDto.Cantidad * edicion.Precio.PrecioRendVendedor;
-
+                    
                     //actualizamos stock
                     if (detalleDto.Id == null)
                     {   // es un nuevo detalle
@@ -245,5 +245,7 @@ namespace rest_api_sigedi.Controllers
         public bool? Anulable { get; set; } = true;
         public bool? Editable { get; set; } = true;
         public bool? YaSeDevolvio { get; set; } = false;
+        public decimal? PrecioVenta { get; set; }
+        public decimal? PrecioRendicion { get; set; }
     }
 }
