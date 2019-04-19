@@ -190,14 +190,7 @@ namespace rest_api_sigedi.Controllers
                     distribucionDet.Editable = true;
                     distribucionDet.Anulable = true;
                     
-                    var distribucion = await _context.Distribuciones
-                    .SingleOrDefaultAsync(d => d.Id == distribucionDet.IdDistribucion);
-
-                    distribucion.Editable = true;
-                    distribucion.Anulable = true;
-
-                    _context.Distribuciones.Update(distribucion);
-                    await _context.SaveChangesAsync();
+                    
                 }
                 if(detalleRen.Devoluciones > 0){
                     //si hubo rendiciones
@@ -228,6 +221,47 @@ namespace rest_api_sigedi.Controllers
                 }
                 _context.DistribucionDetalles.Update(distribucionDet);
                 await _context.SaveChangesAsync();
+
+                var distribucion = await _context.Distribuciones
+                .Include(d => d.Detalle)
+                .SingleOrDefaultAsync(d => d.Id == distribucionDet.IdDistribucion);
+
+                decimal importeSuma = 0;
+                long devolucionSum = 0;
+                foreach(var detalleDis in distribucion.Detalle){
+
+                    importeSuma += (decimal)detalleDis.Importe;
+                    devolucionSum += (long) detalleDis.Devoluciones;
+                }
+                if(importeSuma == 0 && devolucionSum ==0){
+
+                    distribucion.Editable = true;
+                    distribucion.Anulable = true;
+
+                    _context.Distribuciones.Update(distribucion);
+                    await _context.SaveChangesAsync();
+
+                    foreach(var detalleDis in distribucion.Detalle){
+
+                        //traemos la edicion de ese 
+                        var edicion = await _context.Ediciones
+                        .Include(p => p.Precio)
+                        .Where(d => d.Id == detalleDis.IdEdicion)
+                        .SingleOrDefaultAsync();
+
+                        //recalculamos el monto y el saldo
+                        detalleDis.Monto = detalleDis.Cantidad * edicion.Precio.PrecioRendVendedor;
+                        detalleDis.Saldo = detalleDis.Cantidad * edicion.Precio.PrecioRendVendedor;
+                        //actualizamos los precios
+                        detalleDis.PrecioRendicion = edicion.Precio.PrecioRendVendedor;
+                        detalleDis.PrecioVenta = edicion.Precio.PrecioVenta;
+
+                            
+                        _context.DistribucionDetalles.Update(detalleDis);
+                        await _context.SaveChangesAsync();
+                    }
+                }  
+
 
             }
             await _context.SaveChangesAsync();
