@@ -78,6 +78,7 @@ namespace rest_api_sigedi.Controllers
                     .ThenInclude(e => e.Edicion.Articulo)
                 .Include(d => d.Detalle)
                     .ThenInclude(e => e.Edicion.Precio);
+               
         }
 
         protected override async Task ExecuteBeforeSave(DistribucionDto dto)
@@ -211,13 +212,28 @@ namespace rest_api_sigedi.Controllers
             var vendedor = await _context.Vendedores.FindAsync(idVendedor);
             if(vendedor == null) return NotFound();
 
-            var distribuciones = _context.DistribucionDetalles
+            var distribuciones = await _context.DistribucionDetalles
             .Include(d => d.Distribucion)
             .Include(d => d.Edicion).ThenInclude(e => e.Articulo)
             .Include(d => d.Edicion).ThenInclude(e => e.Precio)
-            .Where(d => d.Distribucion.IdVendedor == idVendedor && d.Activo && !d.Anulado);
+            .Where(d => d.Distribucion.IdVendedor == idVendedor && d.Activo && !d.Anulado)
+            .ToListAsync();
 
             return Ok(distribuciones);
+        }
+        
+        [HttpGet("detalle/deudas")]
+        public async Task<IActionResult> GetDeudas(){
+
+            var deudas = await _context.DistribucionDetalles
+            .Include(d => d.Distribucion)
+            .Include(d => d.Distribucion).ThenInclude(v => v.Vendedor)
+            .Include(d => d.Edicion).ThenInclude(e => e.Articulo)
+            .Include(d => d.Edicion).ThenInclude(e => e.Precio)
+            .Where(d =>d.Activo && !d.Anulado)
+            .ToListAsync();
+
+            return Ok(deudas);
         }
     }
 
