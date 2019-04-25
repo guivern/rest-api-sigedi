@@ -274,6 +274,8 @@ namespace rest_api_sigedi.Controllers
         [Requerido]
         public long? IdVendedor { get; set; }
         [Requerido]
+        public long? IdCaja { get; set; }
+        [Requerido]
         public long? IdUsuarioCreador { get; set; }
         public long? IdUsuarioModificador { get; set; }
         public decimal? MontoTotal { get; set; } = 0;

@@ -106,5 +106,6 @@ namespace rest_api_sigedi.Models
         public DbSet<DistribucionDetalle> DistribucionDetalles {get; set;}
         public DbSet<Rendicion> Rendiciones {get; set;}
         public DbSet<RendicionDetalle> RendicionDetalles {get; set;}
+        public DbSet<Caja> Cajas {get; set;}
     }
 }
