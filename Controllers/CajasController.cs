@@ -111,7 +111,7 @@ namespace rest_api_sigedi.Controllers
             var pdf = converter.ConvertToPdf(html);
 
             return File(pdf, MediaTypeNames.Application.Pdf,
-                    $"Reporte Caja Id. {caja.Id} - {DateTime.Now:yyyyMMdd-hhmmss}.pdf");
+                    $"Reporte Caja Id {caja.Id} - {DateTime.Now:yyyyMMdd-hhmmss}.pdf");
         }
 
         /*al desactivar una caja ya no se podran anular las rendiciones*/
