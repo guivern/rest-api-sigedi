@@ -40,6 +40,10 @@ namespace rest_api_sigedi.Models
         public long? Cantidad => DistribucionDetalle?.Cantidad;
         [NotMapped]
         public String NombreArticulo => DistribucionDetalle?.Edicion?.Articulo?.Descripcion;
+        [NotMapped]
+        public String NombreVendedor => Rendicion?.Vendedor?.NombreCompleto;
+        [NotMapped]
+        public DateTime? FechaCreacion => Rendicion?.FechaCreacion;
         
         public Decimal? PrecioVenta {get; set;}
         public Decimal? PrecioRendicion {get; set;}
