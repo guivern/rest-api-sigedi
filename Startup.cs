@@ -19,6 +19,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using rest_api_sigedi.Mappings;
 using rest_api_sigedi.Models;
+using rest_api_sigedi.Utils;
 
 namespace RestApiSigedi
 {
@@ -48,6 +49,8 @@ namespace RestApiSigedi
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
+            // Reportes - Libreria WkWrap.Core
+            services.AddScoped<ViewRender, ViewRender>();
 
             // Add JWT support
             services
