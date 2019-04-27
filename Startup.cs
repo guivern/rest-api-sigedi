@@ -101,10 +101,20 @@ namespace RestApiSigedi
             }
 
             app.UseCors(builder =>
-                builder
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader()
+                    builder
+                        .AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .WithExposedHeaders(
+                            "Authorization",
+                            "Accept-Ranges",
+                            "Content-Encoding",
+                            "Content-Type",
+                            "Content-Length",
+                            "Content-Disposition",
+                            "X-Total-Count",
+                            "X-Total-Pages",
+                            "Content-Range")
                 )
             .UseAuthentication()
             .UseHttpsRedirection()
