@@ -1,0 +1,94 @@
+@using rest_api_sigedi.Models;
+@using rest_api_sigedi.Controllers;
+@{
+    // obtenemos los datos del controller
+    var caja = (Caja) ViewData.Model["Caja"];
+    var rendiciones = (List<RendicionDetalle>) ViewData.Model["Rendiciones"];
+    var resumen = (ResumenRendiciones) ViewData.Model["Resumen"];
+    var culture = System.Globalization.CultureInfo.CreateSpecificCulture("es-ES");
+    var specifier = "0,0";
+    Layout = "_Layout";
+}
+<style>
+table{width:  100%;}
+tfoot{border-top: solid 1px black;}
+thead{border-bottom: solid 1px black;}
+.tablaConBordes{border: solid 1px black;}
+.numero{text-align: right}
+</style>
+<table class="tablaConBordes" style="padding: 5px 20px">
+    <thead>
+    <tr>
+        <th colspan="4">REPORTE DE CAJA</th>
+    </tr>
+    </thead>
+    <tr>
+            <td>I<b>d. Caja:</b></td>
+            <td>@caja.Id</td>
+            <td><b>Cajero:</b></td>
+            <td>@(caja.UsuarioCreador?.NombreCompleto)</td>
+        </tr>
+        <tr>
+            <td><b>Fecha Apertura:</b></td>
+            <td>@caja.FechaCreacion</td>
+            <td><b>Fecha Cierre:</b></td>
+            <td>@caja.FechaCierre</td>
+        </tr>
+        <tr>
+            <td><b>Monto Inicial:</b></td>
+            <td>@(caja.MontoInicial == 0 ? "0" : caja.MontoInicial.Value.ToString(specifier, culture))</td>
+            <td><b>Monto Actual:</b></td>
+            <td>@(caja.Monto == 0 ? "0" : caja.Monto.Value.ToString(specifier, culture))</td>
+        </tr>
+        <tr>
+          <td><b>Estado Caja:</b></td>
+          <td>@(caja.Activo?"ABIERTO":"CERRADO")</td>
+          <td><b>Fecha Reporte:</b></td>
+          <td>@System.DateTime.Now</td>
+        </tr>
+</table>
+<br>
+
+<table style="border-collapse: collapse;">
+    <thead>
+        <tr style="text-align: left;">
+            <th width="15%">Vendedor</th>
+            <th width="15%">Artículo</th>
+            <th>Edición</th>
+            <th class="numero">Cantidad</th>
+            <th class="numero">Monto</th>
+            <th class="numero">Importe</th>
+            <th class="numero">Deuda</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            @if(rendiciones.Count == 0)
+            {
+                <td colspan="4">NO HAY REGISTROS</td>    
+            }
+            else{
+                @foreach (var rendicion in rendiciones)
+                {
+                    <tr>
+                        <td>@rendicion.NombreVendedor</td>
+                        <td>@rendicion.NombreArticulo</td>
+                        <td>@rendicion.FechaEdicion.Value.Date.ToString("dd/MM/yyyy")</td>
+                        <td class="numero">@(rendicion.Cantidad - @rendicion.Devoluciones)</td>
+                        <td class="numero">@(rendicion.Monto == 0 ? "0" : rendicion.Monto.ToString(specifier, culture))</td>
+                        <td class="numero">@(rendicion.Importe == 0 ? "0" : rendicion.Importe.ToString(specifier, culture))</td>
+                        <td class="numero">@(rendicion.Saldo == 0 ? "0" : rendicion.Saldo.ToString(specifier, culture))</td>
+                    </tr>
+                }
+            }
+        </tr>
+        <tfoot>
+            <tr>
+                <td colspan="4"></td>
+                <th class="numero">@(resumen.TotalRendiciones == 0 ? "0" : resumen.TotalRendiciones.ToString(specifier, culture))</th>
+                <th class="numero">@(resumen.TotalIngresos == 0 ? "0" : resumen.TotalIngresos.ToString(specifier, culture))</th>
+                <th class="numero">@(resumen.TotalDeudas == 0 ? "0" : resumen.TotalDeudas.ToString(specifier, culture))</th>
+            </tr>
+        </tfoot>
+    </tbody>
+</table>
