@@ -1,10 +1,16 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using rest_api_sigedi.Annotations;
 using rest_api_sigedi.Models;
+using rest_api_sigedi.Utils;
+using WkWrap.Core;
 
 namespace rest_api_sigedi.Controllers
 {
@@ -12,8 +18,12 @@ namespace rest_api_sigedi.Controllers
     [ApiController]
     public class RendicionesController : CrudControllerConDetalle<Rendicion, RendicionDto, RendicionDetalle, RendicionDetalleDto>
     {
-        public RendicionesController(DataContext context, IMapper mapper) : base(context, mapper)
-        { }
+        private readonly ViewRender _viewRender;
+        
+        public RendicionesController(DataContext context, IMapper mapper, ViewRender viewRender) : base(context, mapper)
+        { 
+            _viewRender = viewRender;
+        }
 
         protected override async Task<bool> IsValidModel(RendicionDto dto)
         {
@@ -24,16 +34,16 @@ namespace rest_api_sigedi.Controllers
                 nameof(dto.Detalle), "Debe ingresar al menos un detalle");
                 return ModelState.IsValid;
             }
-            
+
             var index = 0;
             foreach (var detalle in dto.Detalle)
             {
-                var distribucionDet =  await _context.DistribucionDetalles
+                var distribucionDet = await _context.DistribucionDetalles
                 .Where(d => d.Id == detalle.IdDistribucionDetalle)
                 .SingleOrDefaultAsync();
-              
+
                 //Devolucion no puede ser mayor a la cantidad distribuida
-                if(detalle.Devoluciones > distribucionDet.Cantidad)
+                if (detalle.Devoluciones > distribucionDet.Cantidad)
                 {
                     ModelState.AddModelError(
                     $"Detalle[{index}].Devoluciones", "La cantidad devuelta supera a la cantidad distribuida");
@@ -44,26 +54,41 @@ namespace rest_api_sigedi.Controllers
                 .Include(e => e.Precio)
                 .Where(e => e.Id == distribucionDet.IdEdicion)
                 .SingleOrDefaultAsync();
-                
+
                 var costoDevuelto = detalle.Devoluciones * edicion.Precio.PrecioRendVendedor;
                 var saldoModif = distribucionDet.Saldo - costoDevuelto;
 
-                if(saldoModif < 0)
+                if (saldoModif < 0)
                 {
                     ModelState.AddModelError(
                     $"Detalle[{index}].Devoluciones", "La cantidad devuelta supera en costo al saldo pendiente");
                 }
                 //Importe debe ser menor o igual que el saldo
-                if(saldoModif < detalle.Importe && saldoModif > 0)
+                if (saldoModif < detalle.Importe && saldoModif > 0)
                 {
                     ModelState.AddModelError(
                     $"Detalle[{index}].Importe", "El importe supera al saldo");
                 }
                 index++;
             }
-           return ModelState.IsValid;
+            return ModelState.IsValid;
         }
 
+        [HttpGet("cajero/{idCajero}")]
+        public async Task<IActionResult> ListByCajero(long idCajero)
+        {
+            if(!await _context.Usuarios.AnyAsync(u => u.Id == idCajero)) return NotFound();
+
+            var query = _context.Rendiciones.AsQueryable();
+            query = query.Where(r => r.IdUsuarioCreador == idCajero);
+
+            var result = await IncludeListFields(query)
+            .OrderByDescending(r => r.Id)
+            .ToListAsync();
+
+            return Ok(result);
+        }
+        
         protected override IQueryable<Rendicion> IncludeListFields(IQueryable<Rendicion> query)
         {
             return query
@@ -86,8 +111,6 @@ namespace rest_api_sigedi.Controllers
 
         protected override async Task ExecutePostSave(RendicionDto dto)
         {
-            
-
             foreach (var detalle in dto.Detalle)
             {
                 //Traemos el detalle de la distribucion correspondiente 
@@ -105,13 +128,13 @@ namespace rest_api_sigedi.Controllers
                 distribucion.Editable = false;
                 _context.Distribuciones.Update(distribucion);
                 await _context.SaveChangesAsync();
-                
+
 
                 distribucionDet.Anulable = false;
                 distribucionDet.Editable = false;
                 distribucionDet.YaSeDevolvio = true;
 
-                if(detalle.Devoluciones >0)
+                if (detalle.Devoluciones > 0)
                 {
                     //si hubo devoluciones
 
@@ -122,10 +145,10 @@ namespace rest_api_sigedi.Controllers
                     .SingleOrDefaultAsync();
 
                     //Se actualizan los campos en distribuciones, segun la cantidad devuelta y pagada
-                    distribucionDet.Saldo -= (decimal) detalle.Devoluciones * edicion.Precio.PrecioRendVendedor;
-                    distribucionDet.Monto -= (decimal) detalle.Devoluciones * edicion.Precio.PrecioRendVendedor;
-                    distribucionDet.Importe += (decimal) detalle.Importe;
-                    distribucionDet.Saldo -= (decimal) detalle.Importe;
+                    distribucionDet.Saldo -= (decimal)detalle.Devoluciones * edicion.Precio.PrecioRendVendedor;
+                    distribucionDet.Monto -= (decimal)detalle.Devoluciones * edicion.Precio.PrecioRendVendedor;
+                    distribucionDet.Importe += (decimal)detalle.Importe;
+                    distribucionDet.Saldo -= (decimal)detalle.Importe;
                     distribucionDet.Devoluciones += detalle.Devoluciones;
                     _context.DistribucionDetalles.Update(distribucionDet);
                     await _context.SaveChangesAsync();
@@ -137,24 +160,31 @@ namespace rest_api_sigedi.Controllers
                     _context.Ediciones.Update(edicion);
                     await _context.SaveChangesAsync();
 
-                }else{
-                    //si no hubo devoluciones, solo se actualizan importe y saldo
-
+                }
+                else
+                {   //si no hubo devoluciones, solo se actualizan importe y saldo
                     distribucionDet.Importe += detalle.Importe;
-                    distribucionDet.Saldo -= (decimal) detalle.Importe;
+                    distribucionDet.Saldo -= (decimal)detalle.Importe;
                     distribucionDet.Devoluciones += detalle.Devoluciones;
                     _context.DistribucionDetalles.Update(distribucionDet);
                     await _context.SaveChangesAsync();
                 }
-                
-                //Si se cancela el saldo
-                if(distribucionDet.Saldo == 0)
-                {
+                if (distribucionDet.Saldo == 0)
+                {   //Si se cancela el saldo
                     distribucionDet.Activo = false;
                     _context.DistribucionDetalles.Update(distribucionDet);
                     await _context.SaveChangesAsync();
                 }
             }
+
+            //se suma el importe en caja
+            var caja = await _context.Cajas
+            .Where(c => c.Id == dto.IdCaja)
+            .SingleOrDefaultAsync();
+
+            caja.Monto += dto.ImporteTotal;
+            _context.Cajas.Update(caja);
+            await _context.SaveChangesAsync();
         }
 
         public override async Task<IActionResult> Desactivar(long id)
@@ -163,16 +193,26 @@ namespace rest_api_sigedi.Controllers
             .Include(d => d.Detalle)
             .SingleOrDefaultAsync(d => d.Id == id);
 
-            if(rendicion == null) return NotFound();
-            if(!rendicion.Anulable) return BadRequest();
-            
+            if (rendicion == null) return NotFound();
+            if (!rendicion.Anulable) return BadRequest();
+
             // se anula la rendicion, cambiamos estado
             rendicion.Anulado = true;
             rendicion.Anulable = false;
             _context.Rendiciones.Update(rendicion);
             await _context.SaveChangesAsync();
-            
-            foreach(var detalleRen in rendicion.Detalle){
+
+            //se resta el importe en caja
+            var caja = await _context.Cajas
+            .Where(c => c.Id == rendicion.IdCaja)
+            .SingleOrDefaultAsync();
+
+            caja.Monto -= rendicion.ImporteTotal;
+            _context.Cajas.Update(caja);
+            await _context.SaveChangesAsync();
+
+            foreach (var detalleRen in rendicion.Detalle)
+            {
 
                 //traemos distribucionDetalle correspondiente
                 var distribucionDet = await _context.DistribucionDetalles
@@ -183,19 +223,19 @@ namespace rest_api_sigedi.Controllers
                 detalleRen.Anulable = false;
 
                 //cuando el importe en la distribucion llegue a 0 y no tenga devoluciones se resetea
-                if(distribucionDet.Importe == detalleRen.Importe &&
-                distribucionDet.Devoluciones == detalleRen.Devoluciones){
+                if (distribucionDet.Importe == detalleRen.Importe &&
+                distribucionDet.Devoluciones == detalleRen.Devoluciones)
+                {
 
                     distribucionDet.YaSeDevolvio = false;
                     distribucionDet.Editable = true;
                     distribucionDet.Anulable = true;
-                    
-                    
                 }
-                if(detalleRen.Devoluciones > 0){
+                if (detalleRen.Devoluciones > 0)
+                {
                     //si hubo rendiciones
-                    distribucionDet.Devoluciones -= (long) detalleRen.Devoluciones;
-                    
+                    distribucionDet.Devoluciones -= (long)detalleRen.Devoluciones;
+
                     //traemos la edicion para recalcular el monto y la cantidad en edicion
                     //Edicion a reponer
                     var edicion = await _context.Ediciones
@@ -203,20 +243,21 @@ namespace rest_api_sigedi.Controllers
                     .Where(e => e.Id == distribucionDet.IdEdicion)
                     .SingleOrDefaultAsync();
 
-                    edicion.CantidadActual -= (long) detalleRen.Devoluciones;
-                    distribucionDet.Saldo += (decimal) detalleRen.Devoluciones * edicion.Precio.PrecioRendVendedor;
-                    distribucionDet.Monto += (decimal) detalleRen.Devoluciones * edicion.Precio.PrecioRendVendedor;
-                    distribucionDet.Importe -= (decimal) detalleRen.Importe;
-                    distribucionDet.Saldo += (decimal) detalleRen.Importe;
+                    edicion.CantidadActual -= (long)detalleRen.Devoluciones;
+                    distribucionDet.Saldo += (decimal)detalleRen.Devoluciones * edicion.Precio.PrecioRendVendedor;
+                    distribucionDet.Monto += (decimal)detalleRen.Devoluciones * edicion.Precio.PrecioRendVendedor;
+                    distribucionDet.Importe -= (decimal)detalleRen.Importe;
+                    distribucionDet.Saldo += (decimal)detalleRen.Importe;
                     distribucionDet.Activo = true;
                     _context.Ediciones.Update(edicion);
                     await _context.SaveChangesAsync();
 
-                }else{
-
+                }
+                else
+                {
                     //si no hubo devoluciones
                     distribucionDet.Saldo += detalleRen.Importe;
-                    distribucionDet.Importe -= (decimal) detalleRen.Importe;
+                    distribucionDet.Importe -= (decimal)detalleRen.Importe;
                     distribucionDet.Activo = true;
                 }
                 _context.DistribucionDetalles.Update(distribucionDet);
@@ -228,21 +269,21 @@ namespace rest_api_sigedi.Controllers
 
                 decimal importeSuma = 0;
                 long devolucionSum = 0;
-                foreach(var detalleDis in distribucion.Detalle){
-
+                foreach (var detalleDis in distribucion.Detalle)
+                {
                     importeSuma += (decimal)detalleDis.Importe;
-                    devolucionSum += (long) detalleDis.Devoluciones;
+                    devolucionSum += (long)detalleDis.Devoluciones;
                 }
-                if(importeSuma == 0 && devolucionSum ==0){
-
+                if (importeSuma == 0 && devolucionSum == 0)
+                {
                     distribucion.Editable = true;
                     distribucion.Anulable = true;
 
                     _context.Distribuciones.Update(distribucion);
                     await _context.SaveChangesAsync();
 
-                    foreach(var detalleDis in distribucion.Detalle){
-
+                    foreach (var detalleDis in distribucion.Detalle)
+                    {
                         //traemos la edicion de ese 
                         var edicion = await _context.Ediciones
                         .Include(p => p.Precio)
@@ -256,14 +297,12 @@ namespace rest_api_sigedi.Controllers
                         detalleDis.PrecioRendicion = edicion.Precio.PrecioRendVendedor;
                         detalleDis.PrecioVenta = edicion.Precio.PrecioVenta;
 
-                            
                         _context.DistribucionDetalles.Update(detalleDis);
                         await _context.SaveChangesAsync();
                     }
-                }  
-
-
+                }
             }
+
             await _context.SaveChangesAsync();
             return NoContent();
         }
@@ -284,17 +323,17 @@ namespace rest_api_sigedi.Controllers
         public bool? Anulable { get; set; } = true;
     }
 
-    public class RendicionDetalleDto : DtoBase  
+    public class RendicionDetalleDto : DtoBase
     {
         [Requerido]
         public long? IdDistribucionDetalle { get; set; }
         [NoNegativo]
         [Requerido]
-        public long? Devoluciones {get; set;}
-        public decimal? Monto { get; set; } 
+        public long? Devoluciones { get; set; }
+        public decimal? Monto { get; set; }
         [Requerido]
         public decimal? Importe { get; set; }
-        public decimal? Saldo { get; set; } 
+        public decimal? Saldo { get; set; }
         public bool? Anulable { get; set; } = true;
         public decimal? PrecioVenta { get; set; }
         public decimal? PrecioRendicion { get; set; }
