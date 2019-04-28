@@ -1,0 +1,99 @@
+@using rest_api_sigedi.Models;
+@using rest_api_sigedi.Controllers;
+@{
+    // obtenemos los datos del controller
+    var caja = (Caja) ViewData.Model["Caja"];
+    var rendicionesAgrupadas = (IEnumerable<RendicionDetalleAgrupado>) ViewData.Model["RendicionDetalleAgrupado"];
+    var resumen = (ResumenRendiciones) ViewData.Model["Resumen"];
+    var culture = System.Globalization.CultureInfo.CreateSpecificCulture("es-ES");
+    var specifier = "0,0";
+    Layout = "_Layout";
+}
+<style>
+table{width:  100%; border-collapse: collapse;}
+tfoot{border-top: solid 1px gray;}
+/*thead{border-bottom: solid 1px gray}*/
+.tablaConBordes{border: solid 1px black; border-collapse: separate; padding: 5px 20px;}
+.numero{text-align: right}
+.resumen{width:  40%;}
+</style>
+<table class="tablaConBordes">
+    <thead>
+        <tr>
+            <th colspan="4">REPORTE DE CAJA</th>
+        </tr>
+    </thead>
+    <tr>
+        <td><b>Id. Caja:</b></td>
+        <td>@caja.Id</td>
+        <td><b>Cajero:</b></td>
+        <td>@(caja.UsuarioCreador?.NombreCompleto)</td>
+    </tr>
+    <tr>
+        <td><b>Fecha Apertura:</b></td>
+        <td>@caja.FechaCreacion</td>
+        <td><b>Fecha Cierre:</b></td>
+        <td>@caja.FechaCierre</td>
+    </tr>
+    <tr>
+        <td><b>Monto Inicial:</b></td>
+        <td>@(caja.MontoInicial == 0 ? "0" : caja.MontoInicial.Value.ToString(specifier, culture)) Gs.</td>
+        <td><b>Monto Actual:</b></td>
+        <td>@(caja.Monto == 0 ? "0" : caja.Monto.Value.ToString(specifier, culture)) Gs.</td>
+    </tr>
+    <tr>
+        <td><b>Estado Caja:</b></td>
+        <td>@(caja.Activo?"ABIERTO":"CERRADO")</td>
+        <td><b>Fecha Reporte:</b></td>
+        <td>@System.DateTime.Now</td>
+    </tr>
+</table>
+<br>
+<h3>Rendiciones</h3>
+<hr><br>
+@foreach (var rendicionAgrupada in rendicionesAgrupadas)
+{
+    <table>
+        <thead>
+            <tr>
+                <td colspan="2" style="text-align: left"><b>Vendedor: </b>@(rendicionAgrupada.Rendiciones.ElementAt(0).NombreVendedor)</td>
+            </tr>
+            <tr style="text-align: left;">
+                <th>Id. Rendición</th>
+                <th width="15%">Fecha - Hora</th>
+                <th width="15%">Artículo</th>
+                <th>Edición</th>
+                <th class="numero">Importe</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var detalle in rendicionAgrupada.Rendiciones)
+        {
+            <tr>
+                <td>@detalle.Rendicion.Id</td>
+                <td>@detalle.Rendicion.FechaCreacion</td>
+                <td>@detalle.NombreArticulo</td>
+                <td>@detalle.FechaEdicion.Value.Date.ToString("dd/MM/yyyy")</td>
+                <td class="numero">@(detalle.Importe == 0 ? "0" : detalle.Importe.ToString(specifier, culture))</td>
+            </tr>
+            
+        }
+        </tbody>
+        <tfoot style="border-top: solid 1px gray;">
+            <tr>
+                <td colspan="4"></td>
+                <th class="numero">@(rendicionAgrupada.TotalImporte == 0 ? "0" : rendicionAgrupada.TotalImporte.ToString(specifier, culture))</th>
+            </tr>
+        </tfoot>
+    </table>
+    <br>
+}
+
+<h3>Resumen</h3>
+<hr><br>
+<table class="resumen" style="">
+    <tr>
+        <td><b>Total Ingresos:</b></td>
+        <td>@(resumen.TotalIngresos == 0 ? "0" : resumen.TotalIngresos.ToString(specifier, culture)) Gs.</td>
+    </tr>
+</table>

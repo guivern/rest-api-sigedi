@@ -22,5 +22,7 @@ namespace rest_api_sigedi.Models
 
         [NotMapped]
         public string NombreRol => Rol?.Nombre;
+        [NotMapped]
+        public string NombreCompleto => Nombre + " " + Apellido;
     }
 }

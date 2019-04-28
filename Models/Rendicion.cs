@@ -11,6 +11,11 @@ namespace rest_api_sigedi.Models
         public Vendedor Vendedor {get; set;}
         public long IdVendedor {get; set;}
 
+        [ForeignKey("IdCaja")]
+        [JsonIgnore]
+        public Caja Caja {get; set;}
+        public long IdCaja {get; set;}
+
         [Required]
         public decimal MontoTotal {get; set;}
         [Required]
