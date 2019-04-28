@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using rest_api_sigedi.Annotations;
 using rest_api_sigedi.Models;
 using rest_api_sigedi.Utils;
@@ -19,10 +20,12 @@ namespace rest_api_sigedi.Controllers
     public class CajasController : CrudControllerSinDetalle<Caja, CajaDto>
     {
         private readonly ViewRender _viewRender;
+        private readonly IConfiguration _configuration;
 
-        public CajasController(DataContext context, IMapper mapper, ViewRender viewRender) : base(context, mapper)
+        public CajasController(DataContext context, IMapper mapper, ViewRender viewRender, IConfiguration configuration) : base(context, mapper)
         {
             _viewRender = viewRender;
+            _configuration = configuration;
         }
 
         protected override IQueryable<Caja> IncludeListFields(IQueryable<Caja> query)
@@ -72,7 +75,8 @@ namespace rest_api_sigedi.Controllers
             .SingleOrDefaultAsync(c => c.Id == idCaja);
             if (caja == null) return NotFound();
 
-            var rendiciones = await _context.RendicionDetalles
+            IEnumerable<RendicionDetalleAgrupado> rendicionesAgrupadas =
+            await _context.RendicionDetalles
             .Include(r => r.Rendicion)
             .ThenInclude(r => r.Vendedor)
             .Include(r => r.DistribucionDetalle)
@@ -81,22 +85,38 @@ namespace rest_api_sigedi.Controllers
             .Include(r => r.DistribucionDetalle)
             .ThenInclude(d => d.Edicion)
             .ThenInclude(e => e.Precio)
-            .Where(r => r.Rendicion.IdCaja == idCaja)
+            .Where(r => r.Rendicion.IdCaja == idCaja && !r.Rendicion.Anulado)
             .OrderBy(r => r.Id)
+            .GroupBy( //agrupamos rendiciones por vendedor
+                r => r.Rendicion.Vendedor.Id,
+                r => r,
+                (key, g) => new RendicionDetalleAgrupado{
+                    IdVendedor = key,
+                    TotalMonto = g.Sum( x=> x.Monto),
+                    TotalImporte = g.Sum( x=> x.Importe), 
+                    TotalSaldo = g.Sum( x=> x.Saldo),
+                    Rendiciones = g.ToList()
+                })
             .ToListAsync();
 
+            var rendiciones = await _context.Rendiciones
+            .Where(r => r.IdCaja == idCaja && !r.Anulado)
+            .ToListAsync();
+
+            // resumen general del reporte
             ResumenRendiciones resumen = new ResumenRendiciones()
             {
-                TotalRendiciones = rendiciones.Sum(r => r.Monto),
-                TotalIngresos = rendiciones.Sum(r => r.Importe),
-                TotalDeudas = rendiciones.Sum(r => r.Saldo)
+                TotalRendiciones = rendiciones.Sum(r => r.MontoTotal),
+                TotalIngresos = rendiciones.Sum(r => r.ImporteTotal),
+                TotalDeudas = rendiciones.Sum(r => r.SaldoTotal)
             };
+
 
             // enlazamos los querys a la vista
             var model = new Dictionary<string, object>
             {
                 ["Caja"] = caja,
-                ["Rendiciones"] = rendiciones,
+                ["RendicionDetalleAgrupado"] = rendicionesAgrupadas,
                 ["Resumen"] = resumen
                 // si hay mas querys agregamos aqui
             };
@@ -104,7 +124,7 @@ namespace rest_api_sigedi.Controllers
             // esta parte va a ser igual en todos los reportes
             // lo unico que cambiaria el nombre de la vista en el RenderAsync() 
             // y el nombre del reporte en el File()
-            var wkhtmltopdfpath = "/usr/local/bin/wkhtmltopdf";
+            var wkhtmltopdfpath = _configuration.GetSection("Reportes:WkBinPath").Get<string>();
             var html = await _viewRender.RenderAsync("reporte_caja", model);
             var wkhtmltopdf = new FileInfo(wkhtmltopdfpath);
             var converter = new HtmlToPdfConverter(wkhtmltopdf);
@@ -158,5 +178,14 @@ namespace rest_api_sigedi.Controllers
         public Decimal TotalRendiciones { get; set; }
         public Decimal TotalIngresos { get; set; }
         public Decimal TotalDeudas { get; set; }
+    }
+
+    public class RendicionDetalleAgrupado
+    {   //rendiciones agrupados por vendedor
+        public long IdVendedor { get; set; }
+        public Decimal TotalMonto {get; set;}
+        public Decimal TotalImporte {get; set;}
+        public Decimal TotalSaldo {get; set;}
+        public IEnumerable<RendicionDetalle> Rendiciones { get; set; }
     }
 }

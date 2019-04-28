@@ -88,6 +88,21 @@ namespace rest_api_sigedi.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("caja/{idCaja}")]
+        public async Task<IActionResult> ListByCaja(long idCaja)
+        {
+            if(!await _context.Cajas.AnyAsync(c => c.Id == idCaja)) return NotFound();
+
+            var query = _context.Rendiciones.AsQueryable();
+            query = query.Where(r => r.IdCaja == idCaja);
+
+            var result = await IncludeListFields(query)
+            .OrderByDescending(r => r.Id)
+            .ToListAsync();
+
+            return Ok(result);
+        }
         
         protected override IQueryable<Rendicion> IncludeListFields(IQueryable<Rendicion> query)
         {
