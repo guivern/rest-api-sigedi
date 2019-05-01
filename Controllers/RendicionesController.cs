@@ -350,38 +350,11 @@ namespace rest_api_sigedi.Controllers
             .SingleOrDefaultAsync(c => c.Id == rendiciones.IdCaja);
             if (caja == null) return NotFound();
 
-            /* 
-            IEnumerable<RendicionDetalleAgrupado> rendicionDetalles =
-            await _context.RendicionDetalles
-            .Include(r => r.Rendicion)
-            .ThenInclude(r => r.Vendedor)
-            .Include(r => r.DistribucionDetalle)
-            .ThenInclude(d => d.Edicion)
-            .ThenInclude(e => e.Articulo)
-            .Include(r => r.DistribucionDetalle)
-            .ThenInclude(d => d.Edicion)
-            .ThenInclude(e => e.Precio)
-            .Where(r => r.IdRendicion == rendiciones.Id)
-            .OrderBy(r => r.Id)
-            .GroupBy( //agrupamos rendiciones por vendedor
-                r => r.Rendicion.Vendedor.Id,
-                r => r,
-                (key, g) => new RendicionDetalleAgrupado{
-                    IdVendedor = key,
-                    TotalMonto = g.Sum( x=> x.Monto),
-                    TotalImporte = g.Sum( x=> x.Importe), 
-                    TotalSaldo = g.Sum( x=> x.Saldo),
-                    Rendiciones = g.ToList()
-                })
-            .ToListAsync();
-            */
-
             // enlazamos los querys a la vista
             var model = new Dictionary<string, object>
             {
                 ["Caja"] = caja,
                 ["Rendiciones"] = rendiciones
-               // ["RendicionDetalleAgrupado"] = rendicionDetalles
                 // si hay mas querys agregamos aqui
             };
 
