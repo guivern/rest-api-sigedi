@@ -326,8 +326,8 @@ namespace rest_api_sigedi.Controllers
             return NoContent();
         }
 
-        [HttpGet("reporte/{idRendicion}")]
-        public async Task<IActionResult> GetReporte(long idRendicion){
+        [HttpGet("comprobante/{idRendicion}")]
+        public async Task<IActionResult> GetComprobante(long idRendicion){
 
 
             // realizamos los querys para el reporte
