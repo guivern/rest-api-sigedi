@@ -111,7 +111,8 @@ namespace rest_api_sigedi.Controllers
         {
             return query
             .Include(r => r.Vendedor)
-            .Include(r => r.UsuarioCreador);
+            .Include(r => r.UsuarioCreador)
+            .Include(r => r.Caja);
         }
 
         protected override IQueryable<Rendicion> IncludeDetailFields(IQueryable<Rendicion> query)
