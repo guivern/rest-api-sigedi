@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using rest_api_sigedi.Annotations;
 using rest_api_sigedi.Models;
 using rest_api_sigedi.Utils;
@@ -19,10 +20,12 @@ namespace rest_api_sigedi.Controllers
     public class RendicionesController : CrudControllerConDetalle<Rendicion, RendicionDto, RendicionDetalle, RendicionDetalleDto>
     {
         private readonly ViewRender _viewRender;
+        private readonly IConfiguration _configuration;
         
-        public RendicionesController(DataContext context, IMapper mapper, ViewRender viewRender) : base(context, mapper)
+        public RendicionesController(DataContext context, IMapper mapper, ViewRender viewRender, IConfiguration configuration) : base(context, mapper)
         { 
             _viewRender = viewRender;
+            _configuration = configuration;
         }
 
         protected override async Task<bool> IsValidModel(RendicionDto dto)
@@ -108,7 +111,8 @@ namespace rest_api_sigedi.Controllers
         {
             return query
             .Include(r => r.Vendedor)
-            .Include(r => r.UsuarioCreador);
+            .Include(r => r.UsuarioCreador)
+            .Include(r => r.Caja);
         }
 
         protected override IQueryable<Rendicion> IncludeDetailFields(IQueryable<Rendicion> query)
@@ -321,6 +325,53 @@ namespace rest_api_sigedi.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpGet("reporte/{idRendicion}")]
+        public async Task<IActionResult> GetReporte(long idRendicion){
+
+
+            // realizamos los querys para el reporte
+            var rendiciones =
+            await _context.Rendiciones
+            .Include(r => r.Detalle)
+            .ThenInclude(r => r.DistribucionDetalle)
+            .ThenInclude(d => d.Edicion)
+            .ThenInclude(e => e.Articulo)
+            .Include(r => r.Detalle)
+            .ThenInclude(r => r.DistribucionDetalle)
+            .ThenInclude(d => d.Edicion)
+            .ThenInclude(e => e.Precio)
+            .Include(r => r.Vendedor)
+            .Where(r => r.Id == idRendicion)
+            .SingleOrDefaultAsync();
+            if (rendiciones == null) return NotFound();
+
+            var caja = await _context.Cajas
+            .Include(c => c.UsuarioCreador)
+            .SingleOrDefaultAsync(c => c.Id == rendiciones.IdCaja);
+            if (caja == null) return NotFound();
+
+            // enlazamos los querys a la vista
+            var model = new Dictionary<string, object>
+            {
+                ["Caja"] = caja,
+                ["Rendiciones"] = rendiciones
+                // si hay mas querys agregamos aqui
+            };
+
+            // esta parte va a ser igual en todos los reportes
+            // lo unico que cambiaria el nombre de la vista en el RenderAsync() 
+            // y el nombre del reporte en el File()
+            var wkhtmltopdfpath = _configuration.GetSection("Reportes:WkBinPath").Get<string>();
+            var html = await _viewRender.RenderAsync("reporte_comprobante_rendicion", model);
+            var wkhtmltopdf = new FileInfo(wkhtmltopdfpath);
+            var converter = new HtmlToPdfConverter(wkhtmltopdf);
+            var pdf = converter.ConvertToPdf(html);
+
+            return File(pdf, MediaTypeNames.Application.Pdf,
+                    $"Reporte Comprobante Rendicion Id {rendiciones.Id} - {DateTime.Now:yyyyMMdd-hhmmss}.pdf");
+    }
+
     }
 
     public class RendicionDto : DtoConDetalle<RendicionDetalleDto>

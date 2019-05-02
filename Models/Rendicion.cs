@@ -33,5 +33,7 @@ namespace rest_api_sigedi.Models
         public string NombreUsuario => UsuarioCreador?.Username;
         [NotMapped]
         public string NombreVendedor => Vendedor?.Nombre + " " + Vendedor?.Apellido;
+        [NotMapped]
+        public string Cajero => Caja?.UsuarioCreador?.NombreCompleto;
     }
 }

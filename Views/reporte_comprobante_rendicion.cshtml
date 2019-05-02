@@ -1,0 +1,354 @@
+@using rest_api_sigedi.Models;
+@using rest_api_sigedi.Controllers;
+@{
+    // obtenemos los datos del controller
+    var caja = (Caja) ViewData.Model["Caja"];
+    var rendiciones = (Rendicion) ViewData.Model["Rendiciones"];
+    var culture = System.Globalization.CultureInfo.CreateSpecificCulture("es-ES");
+    var specifier = "0,0";
+    Layout = "_Layout";
+}
+<!DOCTYPE html>
+<html>
+<head>
+	<title>HTML to API - Invoice</title>
+	<link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,700&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+	<!-- <link rel="stylesheet" href="sass/main.css" media="screen" charset="utf-8"/> -->
+	<meta content="width=device-width, initial-scale=1.0" name="viewport">
+	<meta http-equiv="content-type" content="text-html; charset=utf-8">
+	<style type="text/css">
+		html, body, div, span, applet, object, iframe,
+		h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+		a, abbr, acronym, address, big, cite, code,
+		del, dfn, em, img, ins, kbd, q, s, samp,
+		small, strike, strong, sub, sup, tt, var,
+		b, u, i, center,
+		dl, dt, dd, ol, ul, li,
+		fieldset, form, label, legend,
+		table, caption, tbody, tfoot, thead, tr, th, td,
+		article, aside, canvas, details, embed,
+		figure, figcaption, footer, header, hgroup,
+		menu, nav, output, ruby, section, summary,
+		time, mark, audio, video {
+			margin: 0;
+			padding: 0;
+			border: 0;
+			font: inherit;
+			font-size: 100%;
+			vertical-align: baseline;
+		}
+
+		html {
+			line-height: 1;
+		}
+
+		ol, ul {
+			list-style: none;
+		}
+
+		table {
+			border-collapse: collapse;
+			border-spacing: 0;
+		}
+
+		caption, th, td {
+			text-align: left;
+			font-weight: normal;
+			vertical-align: middle;
+		}
+
+		q, blockquote {
+			quotes: none;
+		}
+		q:before, q:after, blockquote:before, blockquote:after {
+			content: "";
+			content: none;
+		}
+
+		article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary {
+			display: block;
+		}
+
+		body {
+			font-family: 'Source Sans Pro', sans-serif;
+			font-weight: 300;
+			font-size: 16px;
+			margin: 0;
+			padding: 0;
+		}
+		body a {
+			text-decoration: none;
+			color: inherit;
+		}
+		body a:hover {
+			color: inherit;
+			opacity: 0.7;
+		}
+		body .container {
+			min-width: 500px;
+			margin: 0 auto;
+			padding: 0 20px;
+		}
+		body .clearfix:after {
+			content: "";
+			display: table;
+			clear: both;
+		}
+		body .left {
+			float: left;
+		}
+		body .right {
+			float: right;
+		}
+		body .helper {
+			display: inline-block;
+			height: 100%;
+			vertical-align: middle;
+		}
+		body .no-break {
+			page-break-inside: avoid;
+		}
+
+		header {
+			margin-top: 20px;
+			margin-bottom: 50px;
+		}
+		header figure {
+			float: left;
+			width: 60px;
+			height: 60px;
+			margin-right: 10px;
+			background-color:  #357AFA;
+			border-radius: 50%;
+			text-align: center;
+		}
+	
+		header .company-address {
+			float: center-left;
+			max-width: 500px;
+			line-height: 1.7em;
+		}
+		header .company-address .title {
+			color:  #357AFA;;
+			font-weight: 400;
+			font-size: 1.9em;
+			text-transform: uppercase;
+		}
+	
+		section .details {
+			margin-bottom: 55px;
+		}
+		section .details .client {
+			width: 50%;
+			line-height: 20px;
+			
+		}
+		section .details .client .name {
+			color: #357AFA;
+
+		}
+		section .details .data {
+			width: 50%;
+			text-align: right;
+		}
+		section .details .title {
+			margin-bottom: 15px;
+			color: #357AFA;
+			font-size: 3em;
+			font-weight: 400;
+			text-transform: uppercase;
+		}
+		section table {
+			width: 100%;
+			border-collapse: collapse;
+			border-spacing: 0;
+			font-size: 0.9166em;
+		}
+		section table .qty, section table .unit, section table .total {
+			width: 90%;
+		}
+		section table .desc {
+			width: 55%;
+		}
+		section table thead {
+			display: table-header-group;
+			vertical-align: middle;
+			border-color: inherit;
+		}
+		section table thead th {
+			padding: 5px 10px;
+			background: #357AFA;
+			border-bottom: 5px solid #FFFFFF;
+			border-right: 4px solid #FFFFFF;
+			text-align: right;
+			color: white;
+			font-weight: 400;
+			text-transform: uppercase;
+		}
+		section table thead th:last-child {
+			border-right: none;
+		}
+		section table thead .desc {
+			text-align: left;
+		}
+		section table thead .qty {
+			text-align: center;
+		}
+		section table tbody td {
+			padding: 10px;
+			background: #FFFFFF;
+			color: #777777;
+			text-align: right;
+			border-bottom: 5px solid #FFFFFF;
+			border-right: 4px solid #FFFFFF;
+		}
+		section table tbody td:last-child {
+			border-right: none;
+		}
+		section table tbody h3 {
+			margin-bottom: 5px;
+			color: #357AFA;
+			font-weight: 600;
+		}
+		section table tbody .desc {
+			text-align: left;
+		}
+		section table tbody .qty {
+			text-align: center;
+		}
+		section table.grand-total {
+			margin-bottom: 45px;
+		}
+		section table.grand-total td {
+			padding: 5px 10px;
+			
+			border: none;
+			color: #777777;
+			text-align: right;
+		}
+		section table.grand-total .desc {
+			background-color: transparent;
+		}
+		section table.grand-total tr:last-child td {
+			font-weight: 600;
+			color: #357AFA;
+			font-size: 1.18181818181818em;
+		}
+
+		footer {
+			margin-bottom: 20px;
+		}
+		footer .end {
+			padding-top: 5px;
+			border-top: 2px solid  #357AFA;
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<header class="clearfix">
+		<div class="container">
+			<div class="company-address">
+				<h2 class="title">Comprobante de Rendición</h2>
+			</div>
+		</div>
+	</header>
+
+	<section>
+		<div class="container">
+			<div class="details clearfix">
+				<div class="client left">
+					<p>
+					<td><b>ID Caja:</b></td>
+					<td class="name">@caja.Id</td>
+					</p>
+					<p>
+					<td><b>Nro. Documento:</b></td>
+					<td class="name">@rendiciones.Vendedor.NumeroDocumento</td>
+					</p>
+					<p>
+					<td><b>Fecha Rendición:</b></td>
+					<td class="name">@rendiciones.FechaCreacion</td>
+					</p>
+					<p>
+					<td><b>Estado Rendición:</b></td>
+					<td class="name">@(rendiciones.Anulado?"ANULADO":"VIGENTE")</td>
+					</p>
+				</div>
+				<div class="client right">
+					<p>
+					<td><b>Cajero:</b></td>
+					<td class="name">@(caja.UsuarioCreador?.NombreCompleto)</td>
+					</p>
+					<p>
+					<td><b>Vendedor:</b></td>
+					<td class="name">@(rendiciones.Vendedor.NombreCompleto)</td>
+					</p>
+					<p>
+					<td><b>Fecha Reporte</b></td>
+					<td class="name">@System.DateTime.Now</td>
+					</p>
+				</div>
+			</div>
+
+			<table border="0" cellspacing="0" cellpadding="0">
+				<thead>
+					<tr></tr>
+						<th class="desc">Detalle</th>
+						<th class="qty">Cantidad Vendida</th>
+						<th class="total">Precio</th>
+						<th class="total">Subtotal</th>
+						<th class="total">Importe</th>
+						<th class="total">Saldo</th>
+					</tr>
+				</thead>
+				<tbody>
+                    @foreach (var detalle in rendiciones.Detalle)
+                    {
+					<tr>
+						<td class="desc">@(detalle.NombreArticulo.ToString())  <br>  @("Edición: "  + detalle.NroEdicion.ToString() + " - " + detalle.FechaEdicion.Value.Date.ToString("dd/MM/yyyy"))</td>
+						<td class="qty">@(detalle.Anulado == true ? detalle.Cantidad - detalle.Devoluciones : detalle.DistribucionDetalle.Cantidad - detalle.DistribucionDetalle.Devoluciones)</td>
+                        <td class="total">@detalle.PrecioRendicion</td>
+						<td class="total">@(detalle.Monto == 0 ? "0" : detalle.Monto.ToString(specifier, culture))</td>
+						<td class="total">@(detalle.Importe == 0 ? "0" : detalle.Importe.ToString(specifier, culture))</td>
+						<td class="total">@(detalle.Saldo == 0 ? "0" : detalle.Saldo.ToString(specifier, culture))</td>
+					</tr>
+                    }
+				</tbody>
+			</table>
+			<div class="no-break">
+				<table class="grand-total">
+					<tbody>
+						<tr>
+							<td class="desc"></td>
+							<td class="total" colspan="5">MONTO TOTAL:</td>
+							<td class="total">@(rendiciones.MontoTotal == 0 ? "0" : rendiciones.MontoTotal.ToString(specifier, culture))</td>
+						</tr>
+					</tbody>
+                    <tbody>
+						<tr>
+							<td class="desc"></td>
+							<td class="total" colspan="5">IMPORTE TOTAL:</td>
+							<td class="total">@(rendiciones.ImporteTotal == 0 ? "0" : rendiciones.ImporteTotal.ToString(specifier, culture))</td>	
+						</tr>
+					</tbody>
+                    <tbody>
+						<tr>
+							<td class="desc"></td>
+							<td class="total" colspan="5">SALDO TOTAL:</td>
+							<td class="total">@(rendiciones.SaldoTotal == 0 ? "0" : rendiciones.SaldoTotal.ToString(specifier, culture))</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+
+	<footer>
+		<div class="container">
+			<div class="end"></div>
+		</div>
+	</footer>
+
+</body>
+</html>
