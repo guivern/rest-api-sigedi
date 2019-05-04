@@ -20,7 +20,7 @@ tfoot{border-top: solid 1px gray;}
 <table class="tablaConBordes">
     <thead>
         <tr>
-            <th colspan="4">REPORTE DE CAJA</th>
+            <th colspan="4">LIQUIDACIÓN</th>
         </tr>
     </thead>
     <tr>
@@ -34,12 +34,6 @@ tfoot{border-top: solid 1px gray;}
         <td>@caja.FechaCreacion</td>
         <td><b>Fecha Cierre:</b></td>
         <td>@caja.FechaCierre</td>
-    </tr>
-    <tr>
-        <td><b>Monto Inicial:</b></td>
-        <td>@(caja.MontoInicial == 0 ? "0" : caja.MontoInicial.Value.ToString(specifier, culture)) Gs.</td>
-        <td><b>Monto Actual:</b></td>
-        <td>@(caja.Monto == 0 ? "0" : caja.Monto.Value.ToString(specifier, culture)) Gs.</td>
     </tr>
     <tr>
         <td><b>Estado Caja:</b></td>
@@ -93,7 +87,15 @@ tfoot{border-top: solid 1px gray;}
 <hr><br>
 <table class="resumen" style="">
     <tr>
-        <td><b>Total Ingresos:</b></td>
-        <td>@(resumen.TotalIngresos == 0 ? "0" : resumen.TotalIngresos.ToString(specifier, culture)) Gs.</td>
+        <td><b>Monto Caja Inicial:</b></td>
+        <td class="numero">@(caja.MontoInicial == 0 ? "0" : caja.MontoInicial.Value.ToString(specifier, culture)) Gs.</td> 
+    </tr>
+    <tr>
+        <td><b>Monto Ingresos:</b></td>
+        <td class="numero">@(resumen.TotalIngresos == 0 ? "0" : resumen.TotalIngresos.ToString(specifier, culture)) Gs.</td>  
+    </tr>
+    <tr>
+        <td><b>Monto Caja Final:</b></td>
+        <td class="numero">@(caja.Monto == 0 ? "0" : caja.Monto.Value.ToString(specifier, culture)) Gs.</td>  
     </tr>
 </table>
