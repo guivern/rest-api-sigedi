@@ -109,6 +109,9 @@
 			page-break-inside: avoid;
 		}
 
+		b {
+			font-weight: bold;
+		}
 		header {
 			margin-top: 20px;
 			margin-bottom: 50px;
@@ -144,7 +147,8 @@
 			
 		}
 		section .details .client .name {
-			color: #357AFA;
+			color: #000000;
+			font-weight: lighter;
 
 		}
 		section .details .data {
@@ -253,36 +257,42 @@
 		<div class="container">
 			<div class="details clearfix">
 				<div class="client left">
-					<p>
-					<td style="font-weight: bold">Id. Caja:</td>
-					<td class="name">@caja.Id</td>
-					</p>
-					<p>
-					<td><b>Nro. Documento:</b></td>
-					<td class="name">@rendiciones.Vendedor.NumeroDocumento</td>
-					</p>
-					<p>
-					<td><b>Fecha Rendición:</b></td>
-					<td class="name">@rendiciones.FechaCreacion</td>
-					</p>
-					<p>
-					<td><b>Estado Rendición:</b></td>
-					<td class="name">@(rendiciones.Anulado?"ANULADO":"APROBADO")</td>
-					</p>
+					
+					<p class="client name left"><b>Id. Caja:</b></p>
+					<p class="client name right">@(caja.Id)</p>
+					<br><br>
+					
+					
+					<p class="client name left"><b>Nro. Documento:</b></p>
+					<p class="client name right">@(rendiciones.Vendedor.NumeroDocumento)</p>
+					<br><br>
+					
+					
+					<p class="client name left"><b>Fecha Rendición:</b></p>
+					<p class="client name right">@(rendiciones.FechaCreacion)</p>
+					<br><br>
+					
+				
+					<p class="client name left"><b>Estado Rendición:</b></p>
+					<p class="client name right">@(rendiciones.Anulado?"ANULADO":"APROBADO")</p>
+					<br><br>
+					
 				</div>
 				<div class="client right">
-					<p>
-					<td><b>Cajero:</b></td>
-					<td class="name">@(caja.UsuarioCreador?.NombreCompleto)</td>
-					</p>
-					<p>
-					<td><b>Vendedor:</b></td>
-					<td class="name">@(rendiciones.Vendedor.NombreCompleto)</td>
-					</p>
-					<p>
-					<td><b>Fecha Reporte</b></td>
-					<td class="name">@System.DateTime.Now</td>
-					</p>
+					
+					<p class="client name left"><b>Cajero:</b></p>
+					<p class="client name right">@(caja.UsuarioCreador?.NombreCompleto)</p>
+					<br><br>
+					
+					
+					<p class="client name left"><b>Vendedor:</b></p>
+					<p class="client name right">@(rendiciones.Vendedor.NombreCompleto)</p>
+					<br><br>
+					
+					<p class="client name left"><b>Fecha Reporte:</b></p>
+					<p class="client name right">@(System.DateTime.Now)</p>
+					<br><br>
+					
 				</div>
 			</div>
 
