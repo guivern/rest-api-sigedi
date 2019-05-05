@@ -20,7 +20,7 @@ tfoot{border-top: solid 1px gray;}
 <table class="tablaConBordes">
     <thead>
         <tr>
-            <th colspan="4">LIQUIDACIÓN</th>
+            <th colspan="4">Reporte de Caja</th>
         </tr>
     </thead>
     <tr>
@@ -83,11 +83,11 @@ tfoot{border-top: solid 1px gray;}
     <br>
 }
 
-<h3>Resumen</h3>
+<h3>Liquidación</h3>
 <hr><br>
 <table class="resumen" style="">
     <tr>
-        <td><b>Monto Caja Inicial:</b></td>
+        <td><b>Monto Inicial:</b></td>
         <td class="numero">@(caja.MontoInicial == 0 ? "0" : caja.MontoInicial.Value.ToString(specifier, culture)) Gs.</td> 
     </tr>
     <tr>
@@ -95,7 +95,7 @@ tfoot{border-top: solid 1px gray;}
         <td class="numero">@(resumen.TotalIngresos == 0 ? "0" : resumen.TotalIngresos.ToString(specifier, culture)) Gs.</td>  
     </tr>
     <tr>
-        <td><b>Monto Caja Final:</b></td>
+        <td><b>Monto Final:</b></td>
         <td class="numero">@(caja.Monto == 0 ? "0" : caja.Monto.Value.ToString(specifier, culture)) Gs.</td>  
     </tr>
 </table>
