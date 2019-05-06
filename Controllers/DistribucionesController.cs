@@ -1,10 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using rest_api_sigedi.Annotations;
 using rest_api_sigedi.Models;
+using rest_api_sigedi.Utils;
+using WkWrap.Core;
 
 namespace rest_api_sigedi.Controllers
 {
@@ -12,8 +19,14 @@ namespace rest_api_sigedi.Controllers
     [ApiController]
     public class DistribucionesController : CrudControllerConDetalle<Distribucion, DistribucionDto, DistribucionDetalle, DistribucionDetalleDto>
     {
-        public DistribucionesController(DataContext context, IMapper mapper) : base(context, mapper)
-        { }
+        private readonly ViewRender _viewRender;
+        private readonly IConfiguration _configuration;
+        
+        public DistribucionesController(DataContext context, IMapper mapper, ViewRender viewRender, IConfiguration configuration) : base(context, mapper)
+        { 
+            _viewRender = viewRender;
+            _configuration = configuration;
+        }
 
         protected override async Task<bool> IsValidModel(DistribucionDto dto)
         {
@@ -235,6 +248,66 @@ namespace rest_api_sigedi.Controllers
 
             return Ok(deudas);
         }
+
+        [HttpGet("reporte/ventas/")]
+        public async Task<IActionResult> GetReporteVentas([FromQuery] DateTime fechaInicio, [FromQuery] DateTime fechaFin){
+
+            IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadas =
+            await _context.DistribucionDetalles
+            .Include(d => d.Distribucion)
+            .ThenInclude(d => d.Vendedor)
+            .Include(d => d.Edicion)
+            .ThenInclude(e => e.Articulo)
+            .Include(d => d.Edicion)
+            .ThenInclude(e => e.Precio)
+            .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
+            && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
+            && !d.Distribucion.Anulado)
+            .OrderBy(r => r.Id)
+            .GroupBy( //agrupamos distribuciones por vendedor
+                r => r.Distribucion.Vendedor.Id,
+                r => r,
+                (key, g) => new DistribucionDetalleAgrupado{
+                    IdVendedor = key,
+                    TotalMonto = g.Sum( x=> x.Monto),
+                    TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                    TotalSaldo = g.Sum( x=> x.Saldo),
+                    Distribuciones = g.ToList()
+                })
+            .ToListAsync();
+            
+
+            // resumen general del reporte
+            ResumenDistribuciones resumen = new ResumenDistribuciones()
+            {
+                TotalDistribuciones = distribucionesAgrupadas.Sum(d => d.TotalMonto),
+                TotalIngresos = distribucionesAgrupadas.Sum(d => d.TotalImporte),
+                TotalDeudas = distribucionesAgrupadas.Sum(d => d.TotalSaldo),
+                FechaInicioResumen = fechaInicio,
+                FechaFinResumen = fechaFin
+            };
+
+            // enlazamos los querys a la vista
+            var model = new Dictionary<string, object>
+            {
+                ["DistribucionDetalleAgrupado"] = distribucionesAgrupadas,
+                ["Resumen"] = resumen
+                // si hay mas querys agregamos aqui
+            };
+
+            // esta parte va a ser igual en todos los reportes
+            // lo unico que cambiaria el nombre de la vista en el RenderAsync() 
+            // y el nombre del reporte en el File()
+            var wkhtmltopdfpath = _configuration.GetSection("Reportes:WkBinPath").Get<string>();
+            var html = await _viewRender.RenderAsync("reporte_ventas_diarias", model);
+            var wkhtmltopdf = new FileInfo(wkhtmltopdfpath);
+            var converter = new HtmlToPdfConverter(wkhtmltopdf);
+            var pdf = converter.ConvertToPdf(html);
+
+            return File(pdf, MediaTypeNames.Application.Pdf,
+                    $"Reporte Ventas Diarias {DateTime.Now:yyyyMMdd-hhmmss}.pdf");
+
+        }
     }
 
     public class DistribucionDto : DtoConDetalle<DistribucionDetalleDto>
@@ -264,4 +337,24 @@ namespace rest_api_sigedi.Controllers
         public decimal? PrecioVenta { get; set; }
         public decimal? PrecioRendicion { get; set; }
     }
+
+
+    public class ResumenDistribuciones
+    {
+        public Decimal TotalDistribuciones { get; set; }
+        public Decimal TotalIngresos { get; set; }
+        public Decimal TotalDeudas { get; set; }
+        public DateTime FechaInicioResumen {get; set;}
+        public DateTime FechaFinResumen {get; set;}
+    }
+
+    public class DistribucionDetalleAgrupado
+    {   //distribuciones agrupadas por vendedor
+        public long IdVendedor { get; set; }
+        public Decimal TotalMonto {get; set;}
+        public Decimal TotalImporte {get; set;}
+        public Decimal TotalSaldo {get; set;}
+        public IEnumerable<DistribucionDetalle> Distribuciones { get; set; }
+    }
+
 }
