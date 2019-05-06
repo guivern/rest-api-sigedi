@@ -250,7 +250,7 @@ namespace rest_api_sigedi.Controllers
         }
 
         [HttpGet("reporte/ventas/")]
-        public async Task<IActionResult> GetReporteVentas( Fechas fechasParametro){
+        public async Task<IActionResult> GetReporteVentas([FromQuery] DateTime fechaInicio, [FromQuery] DateTime fechaFin){
 
             IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadas =
             await _context.DistribucionDetalles
@@ -260,8 +260,8 @@ namespace rest_api_sigedi.Controllers
             .ThenInclude(e => e.Articulo)
             .Include(d => d.Edicion)
             .ThenInclude(e => e.Precio)
-            .Where(d => d.Distribucion.FechaCreacion.Date >= fechasParametro.fechaInicio.Date 
-            && d.Distribucion.FechaCreacion.Date <= fechasParametro.fechaFin.Date 
+            .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
+            && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
             && !d.Distribucion.Anulado)
             .OrderBy(r => r.Id)
             .GroupBy( //agrupamos distribuciones por vendedor
@@ -283,8 +283,8 @@ namespace rest_api_sigedi.Controllers
                 TotalDistribuciones = distribucionesAgrupadas.Sum(d => d.TotalMonto),
                 TotalIngresos = distribucionesAgrupadas.Sum(d => d.TotalImporte),
                 TotalDeudas = distribucionesAgrupadas.Sum(d => d.TotalSaldo),
-                FechaInicioResumen = fechasParametro.fechaInicio,
-                FechaFinResumen = fechasParametro.fechaFin
+                FechaInicioResumen = fechaInicio,
+                FechaFinResumen = fechaFin
             };
 
             // enlazamos los querys a la vista
@@ -357,9 +357,4 @@ namespace rest_api_sigedi.Controllers
         public IEnumerable<DistribucionDetalle> Distribuciones { get; set; }
     }
 
-    public class Fechas 
-    {
-        public DateTime fechaInicio {get; set;}
-        public DateTime fechaFin {get; set;}
-    }
 }
