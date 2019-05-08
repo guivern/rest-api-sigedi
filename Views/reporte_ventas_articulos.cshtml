@@ -4,6 +4,7 @@
     // obtenemos los datos del controller
     var distribucionesAgrupadas = (IEnumerable<DistribucionDetalleAgrupado>) ViewData.Model["DistribucionDetalleAgrupado"];
     var resumen = (ResumenDistribuciones) ViewData.Model["Resumen"];
+    var distribucionesV = (IEnumerable<DistribucionFecha>) ViewData.Model["DistribucionV"];
     var culture = System.Globalization.CultureInfo.CreateSpecificCulture("es-ES");
     var specifier = "0,0";
     Layout = "_Layout";
@@ -19,7 +20,7 @@ tfoot{border-top: solid 1px gray;}
 <table class="tablaConBordes">
     <thead>
         <tr>
-            <th colspan="4">Reporte de Ventas Diarias</th>
+            <th colspan="4">Reporte de Ventas por Artículo</th>
         </tr>
     </thead>
     <tr>
@@ -38,18 +39,26 @@ tfoot{border-top: solid 1px gray;}
 <br>
 <h3>Ventas</h3>
 <hr><br>
-@foreach (var distribucionAgrupada in distribucionesAgrupadas)
+
+@foreach (var distribucionesFecha in distribucionesV){
+
+<h3>Fecha: @(distribucionesFecha.FechaCreacion.Date.ToString("dd/MM/yyyy"))</h3>
+         
+@foreach (var distribucionAgrupada in distribucionesAgrupadas.Where(n => n.FechaCreacion == distribucionesFecha.FechaCreacion))
 {
+
     <table>
         <thead>
             <tr>
-                <td colspan="2" style="text-align: left"><b>Fecha: <b>@(distribucionAgrupada.Distribuciones.ElementAt(0).Distribucion.FechaCreacion.Date.ToString("dd/MM/yyyy"))<br><br></td>
+                <td colspan="2" style="text-align: left"><b>Artículo: </b>@(distribucionAgrupada.Distribuciones.ElementAt(0).NombreArticulo)<br><br></td>
             </tr>
+            
             <tr style="text-align: left;">
-                <th width ="15%">Artículo</th>
+                <th width ="15%">Vendedor</th>
                 <th>Nro. Edición</th>
                 <th width ="12%">Fecha Edición</th>
-                <th>Cantidad Vendida</th>
+                <th class="numero">Precio Unit.</th>
+                <th class="numero">Cantidad Vendida</th>
                 <th class="numero">Monto</th>
                 <th class="numero">Importe</th>
                 <th class="numero">Saldo</th>
@@ -59,10 +68,11 @@ tfoot{border-top: solid 1px gray;}
         @foreach (var detalle in distribucionAgrupada.Distribuciones)
         {
             <tr>
-                <td>@detalle.NombreArticulo.ToString()</td>
+                <td>@detalle.NombreVendedor.ToString()</td>
                 <td>@detalle.NroEdicion.ToString()</td>
                 <td>@detalle.FechaEdicion.Value.Date.ToString("dd/MM/yyyy")</td>
-                <td>@(detalle.Cantidad - detalle.Devoluciones)</td>
+                <td class="numero">@detalle.PrecioRendicion</td>
+                <td class="numero">@(detalle.Cantidad - detalle.Devoluciones)</td>
                 <td class="numero">@(detalle.Monto == 0 ? "0" : detalle.Monto.ToString(specifier, culture))</td>
                 <td class="numero">@(detalle.Importe == 0 ? "0" : detalle.Importe.Value.ToString(specifier, culture))</td>
                 <td class="numero">@(detalle.Saldo == 0 ? "0" : detalle.Saldo.ToString(specifier, culture))</td>
@@ -73,6 +83,7 @@ tfoot{border-top: solid 1px gray;}
         <tfoot style="border-top: solid 1px gray;">
             <tr>
                 <td colspan="4"></td>
+                <th class="numero">@(distribucionAgrupada.TotalCantidad - distribucionAgrupada.TotalDevoluciones)</th>
                 <th class="numero">@(distribucionAgrupada.TotalMonto == 0 ? "0" : distribucionAgrupada.TotalMonto.ToString(specifier, culture))</th>
                 <th class="numero">@(distribucionAgrupada.TotalImporte == 0 ? "0" : distribucionAgrupada.TotalImporte.ToString(specifier, culture))</th>
                 <th class="numero">@(distribucionAgrupada.TotalSaldo == 0 ? "0" : distribucionAgrupada.TotalSaldo.ToString(specifier, culture))</th>
@@ -80,6 +91,7 @@ tfoot{border-top: solid 1px gray;}
         </tfoot>
     </table>
     <br>
+}
 }
 
 

@@ -4,6 +4,7 @@
     // obtenemos los datos del controller
     var distribucionesAgrupadas = (IEnumerable<DistribucionDetalleAgrupado>) ViewData.Model["DistribucionDetalleAgrupado"];
     var resumen = (ResumenDistribuciones) ViewData.Model["Resumen"];
+    var distribucionesV = (IEnumerable<DistribucionFecha>) ViewData.Model["DistribucionV"];
     var culture = System.Globalization.CultureInfo.CreateSpecificCulture("es-ES");
     var specifier = "0,0";
     Layout = "_Layout";
@@ -19,7 +20,7 @@ tfoot{border-top: solid 1px gray;}
 <table class="tablaConBordes">
     <thead>
         <tr>
-            <th colspan="4">Reporte de Ventas Diarias</th>
+            <th colspan="4">Reporte de Ventas por Vendedor</th>
         </tr>
     </thead>
     <tr>
@@ -38,12 +39,16 @@ tfoot{border-top: solid 1px gray;}
 <br>
 <h3>Ventas</h3>
 <hr><br>
-@foreach (var distribucionAgrupada in distribucionesAgrupadas)
+
+@foreach (var distribucionesFecha in distribucionesV){
+
+<h3>Fecha: @(distribucionesFecha.FechaCreacion.Date.ToString("dd/MM/yyyy"))</h3>
+@foreach (var distribucionAgrupada in distribucionesAgrupadas.Where(n => n.FechaCreacion == distribucionesFecha.FechaCreacion))
 {
     <table>
         <thead>
             <tr>
-                <td colspan="2" style="text-align: left"><b>Fecha: <b>@(distribucionAgrupada.Distribuciones.ElementAt(0).Distribucion.FechaCreacion.Date.ToString("dd/MM/yyyy"))<br><br></td>
+                <td colspan="2" style="text-align: left"><b>Vendedor: </b>@(distribucionAgrupada.Distribuciones.ElementAt(0).NombreVendedor)<br><br></td>
             </tr>
             <tr style="text-align: left;">
                 <th width ="15%">Artículo</th>
@@ -81,7 +86,7 @@ tfoot{border-top: solid 1px gray;}
     </table>
     <br>
 }
-
+}
 
 <h3>Resumen</h3>
 <hr><br>
