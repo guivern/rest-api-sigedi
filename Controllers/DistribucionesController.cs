@@ -252,7 +252,7 @@ namespace rest_api_sigedi.Controllers
         [HttpGet("reporte/ventas/")]
         public async Task<IActionResult> GetReporteVentas([FromQuery] DateTime fechaInicio, [FromQuery] DateTime fechaFin, [FromQuery] String tipo){
 
-            if( tipo == "vendedores"){
+            if( tipo == "Vendedores"){
             
                 IEnumerable<DistribucionFecha> distribucionV =
                 await _context.Distribuciones
@@ -336,7 +336,7 @@ namespace rest_api_sigedi.Controllers
                 return File(pdf, MediaTypeNames.Application.Pdf,
                         $"Reporte Ventas Vendedor {DateTime.Now:yyyyMMdd-hhmmss}.pdf");
 
-            }else if(tipo == "diarias"){
+            }else if(tipo == "Diarias"){
 
                 //VENTAS DIARIAS
 
@@ -394,7 +394,7 @@ namespace rest_api_sigedi.Controllers
                 return File(pdf, MediaTypeNames.Application.Pdf,
                         $"Reporte Ventas Diarias {DateTime.Now:yyyyMMdd-hhmmss}.pdf");
 
-            }else if(tipo == "articulos"){
+            }else if(tipo == "Articulos"){
 
                 //VENTAS POR ARTICULOS
 

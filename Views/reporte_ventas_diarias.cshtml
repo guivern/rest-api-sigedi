@@ -49,7 +49,7 @@ tfoot{border-top: solid 1px gray;}
                 <th width ="15%">Artículo</th>
                 <th>Nro. Edición</th>
                 <th width ="12%">Fecha Edición</th>
-                <th>Cantidad Vendida</th>
+                <th class="numero">Cantidad Vendida</th>
                 <th class="numero">Monto</th>
                 <th class="numero">Importe</th>
                 <th class="numero">Saldo</th>
@@ -62,7 +62,7 @@ tfoot{border-top: solid 1px gray;}
                 <td>@detalle.NombreArticulo.ToString()</td>
                 <td>@detalle.NroEdicion.ToString()</td>
                 <td>@detalle.FechaEdicion.Value.Date.ToString("dd/MM/yyyy")</td>
-                <td>@(detalle.Cantidad - detalle.Devoluciones)</td>
+                <td class="numero">@(detalle.Cantidad - detalle.Devoluciones)</td>
                 <td class="numero">@(detalle.Monto == 0 ? "0" : detalle.Monto.ToString(specifier, culture))</td>
                 <td class="numero">@(detalle.Importe == 0 ? "0" : detalle.Importe.Value.ToString(specifier, culture))</td>
                 <td class="numero">@(detalle.Saldo == 0 ? "0" : detalle.Saldo.ToString(specifier, culture))</td>
