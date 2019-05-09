@@ -304,6 +304,42 @@ namespace rest_api_sigedi.Controllers
                     })
                 .ToListAsync();
                 
+                IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadasAV =
+                await _context.DistribucionDetalles
+                .Include(d => d.Distribucion)
+                .ThenInclude(d => d.Vendedor)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Articulo)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Precio)
+                .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
+                && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
+                && !d.Distribucion.Anulado)
+                .OrderBy(r => r.Distribucion.FechaCreacion)
+                .GroupBy( //agrupamos distribuciones por articulo
+                    c => new {
+                        IdArticuloP = c.Edicion.Articulo,
+                        FechaCreacionP = c.Distribucion.FechaCreacion.Date,
+                        IdEdicionP = c.Edicion,
+                        IdVendedorP = c.Distribucion.Vendedor
+                    })
+                    .Select(g => new DistribucionDetalleAgrupado(){
+                        IdArticulo = g.Key.IdArticuloP.Id,
+                        FechaCreacion = g.Key.FechaCreacionP,
+                        IdEdicion = g.Key.IdEdicionP.Id,
+                        IdVendedor = g.Key.IdVendedorP.Id,
+                        NombreArticulo = g.Key.IdArticuloP.Descripcion,
+                        NroEdicion = g.Key.IdEdicionP.NroEdicion,
+                        FechaEdicion = g.Key.IdEdicionP.FechaEdicion,
+                        TotalCantidad = g.Sum( x => x.Cantidad),
+                        TotalDevoluciones = g.Sum( x => x.Devoluciones),
+                        TotalMonto = g.Sum( x=> x.Monto),
+                        TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                        TotalSaldo = g.Sum( x=> x.Saldo),
+                        Distribuciones = g.ToList()
+
+                    })
+                .ToListAsync();
 
                 // resumen general del reporte
                 ResumenDistribuciones resumen = new ResumenDistribuciones()
@@ -320,7 +356,8 @@ namespace rest_api_sigedi.Controllers
                 {
                     ["DistribucionDetalleAgrupado"] = distribucionesAgrupadas,
                     ["Resumen"] = resumen,
-                    ["DistribucionV"] = distribucionV
+                    ["DistribucionV"] = distribucionV,
+                    ["DistribucionDetalleAgrupadoAV"] = distribucionesAgrupadasAV,
                     // si hay mas querys agregamos aqui
                 };
 
@@ -364,6 +401,41 @@ namespace rest_api_sigedi.Controllers
                     })
                 .ToListAsync();  
 
+                IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadasA =
+                await _context.DistribucionDetalles
+                .Include(d => d.Distribucion)
+                .ThenInclude(d => d.Vendedor)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Articulo)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Precio)
+                .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
+                && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
+                && !d.Distribucion.Anulado)
+                .OrderBy(r => r.Distribucion.FechaCreacion)
+                .GroupBy( //agrupamos distribuciones por articulo
+                    c => new {
+                        IdArticuloP = c.Edicion.Articulo,
+                        FechaCreacionP = c.Distribucion.FechaCreacion.Date,
+                        IdEdicionP = c.Edicion
+                    })
+                    .Select(g => new DistribucionDetalleAgrupado(){
+                        IdArticulo = g.Key.IdArticuloP.Id,
+                        FechaCreacion = g.Key.FechaCreacionP,
+                        IdEdicion = g.Key.IdEdicionP.Id,
+                        NombreArticulo = g.Key.IdArticuloP.Descripcion,
+                        NroEdicion = g.Key.IdEdicionP.NroEdicion,
+                        FechaEdicion = g.Key.IdEdicionP.FechaEdicion,
+                        TotalCantidad = g.Sum( x => x.Cantidad),
+                        TotalDevoluciones = g.Sum( x => x.Devoluciones),
+                        TotalMonto = g.Sum( x=> x.Monto),
+                        TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                        TotalSaldo = g.Sum( x=> x.Saldo),
+                        Distribuciones = g.ToList()
+
+                    })
+                .ToListAsync();
+
                 // resumen general del reporte
                 ResumenDistribuciones resumen = new ResumenDistribuciones()
                 {
@@ -378,7 +450,8 @@ namespace rest_api_sigedi.Controllers
                 var model = new Dictionary<string, object>
                 {
                     ["DistribucionDetalleAgrupado"] = distribucionesAgrupadas,
-                    ["Resumen"] = resumen
+                    ["Resumen"] = resumen,
+                    ["DistribucionDetalleAgrupadoA"] = distribucionesAgrupadasA,
                     // si hay mas querys agregamos aqui
                 };
 
@@ -433,11 +506,12 @@ namespace rest_api_sigedi.Controllers
                     c => new {
                         IdArticuloP = c.Edicion.Articulo.Id,
                         FechaCreacionP = c.Distribucion.FechaCreacion.Date,
-                        
+                        IdEdicionP = c.Edicion.Id,
                     })
                     .Select(g => new DistribucionDetalleAgrupado(){
                         IdArticulo = g.Key.IdArticuloP,
                         FechaCreacion = g.Key.FechaCreacionP,
+                        IdEdicion = g.Key.IdEdicionP,
                         TotalCantidad = g.Sum( x => x.Cantidad),
                         TotalDevoluciones = g.Sum( x => x.Devoluciones),
                         TotalMonto = g.Sum( x=> x.Monto),
@@ -446,7 +520,47 @@ namespace rest_api_sigedi.Controllers
                         Distribuciones = g.ToList()
 
                     })
-                .ToListAsync();  
+                .ToListAsync();
+
+
+                IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadasVendedor =
+                await _context.DistribucionDetalles
+                .Include(d => d.Distribucion)
+                .ThenInclude(d => d.Vendedor)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Articulo)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Precio)
+                .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
+                && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
+                && !d.Distribucion.Anulado)
+                .OrderBy(r => r.Distribucion.FechaCreacion)
+                .GroupBy( //agrupamos distribuciones por articulo
+                    c => new {
+                        IdArticuloP = c.Edicion.Articulo.Id,
+                        FechaCreacionP = c.Distribucion.FechaCreacion.Date,
+                        IdEdicionP = c.Edicion,
+                        IdVendedorP = c.Distribucion.Vendedor,
+    
+                    })
+                    .Select(g => new DistribucionDetalleAgrupado(){
+                        IdArticulo = g.Key.IdArticuloP,
+                        FechaCreacion = g.Key.FechaCreacionP,
+                        IdEdicion = g.Key.IdEdicionP.Id,
+                        IdVendedor = g.Key.IdVendedorP.Id,
+                        NombreVendedor = g.Key.IdVendedorP.NombreCompleto,
+                        PrecioUnitario = g.Key.IdEdicionP.PrecioRendicion,
+                        TotalCantidad = g.Sum( x => x.Cantidad),
+                        TotalDevoluciones = g.Sum( x => x.Devoluciones),
+                        TotalMonto = g.Sum( x=> x.Monto),
+                        TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                        TotalSaldo = g.Sum( x=> x.Saldo),
+                        Distribuciones = g.ToList()
+
+                    })
+                .ToListAsync();
+
+
 
                 // resumen general del reporte
                 ResumenDistribuciones resumen = new ResumenDistribuciones()
@@ -463,7 +577,8 @@ namespace rest_api_sigedi.Controllers
                 {
                     ["DistribucionDetalleAgrupado"] = distribucionesAgrupadas,
                     ["Resumen"] = resumen,
-                    ["DistribucionV"] = distribucionV
+                    ["DistribucionV"] = distribucionV,
+                    ["DistribucionDetalleAgrupadoV"] = distribucionesAgrupadasVendedor,
                     // si hay mas querys agregamos aqui
                 };
 
@@ -533,10 +648,17 @@ namespace rest_api_sigedi.Controllers
         public long IdArticulo {get; set;}
         public long TotalCantidad {get; set;}
         public long? TotalDevoluciones {get; set;}
+        public long IdEdicion {get; set;}
+        public String NombreVendedor {get; set;}
+        public decimal? PrecioUnitario {get; set;}
+        public string NombreArticulo {get; set;}
+        public long NroEdicion {get; set;}
+        public DateTime? FechaEdicion {get; set;}
     }
 
     public class DistribucionFecha{
         public DateTime FechaCreacion {get; set;}
         public IEnumerable<Distribucion> DistribucionesFecha { get; set; }
     }
+
 }

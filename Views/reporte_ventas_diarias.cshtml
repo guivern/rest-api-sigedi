@@ -4,6 +4,7 @@
     // obtenemos los datos del controller
     var distribucionesAgrupadas = (IEnumerable<DistribucionDetalleAgrupado>) ViewData.Model["DistribucionDetalleAgrupado"];
     var resumen = (ResumenDistribuciones) ViewData.Model["Resumen"];
+    var distribucionesAgrupadasA = (IEnumerable<DistribucionDetalleAgrupado>) ViewData.Model["DistribucionDetalleAgrupadoA"];
     var culture = System.Globalization.CultureInfo.CreateSpecificCulture("es-ES");
     var specifier = "0,0";
     Layout = "_Layout";
@@ -56,16 +57,17 @@ tfoot{border-top: solid 1px gray;}
             </tr>
         </thead>
         <tbody>
-        @foreach (var detalle in distribucionAgrupada.Distribuciones)
+        @foreach (var detalle in distribucionesAgrupadasA.Where(
+            a => a.FechaCreacion == distribucionAgrupada.FechaCreacion ))
         {
             <tr>
                 <td>@detalle.NombreArticulo.ToString()</td>
                 <td>@detalle.NroEdicion.ToString()</td>
                 <td>@detalle.FechaEdicion.Value.Date.ToString("dd/MM/yyyy")</td>
-                <td class="numero">@(detalle.Cantidad - detalle.Devoluciones)</td>
-                <td class="numero">@(detalle.Monto == 0 ? "0" : detalle.Monto.ToString(specifier, culture))</td>
-                <td class="numero">@(detalle.Importe == 0 ? "0" : detalle.Importe.Value.ToString(specifier, culture))</td>
-                <td class="numero">@(detalle.Saldo == 0 ? "0" : detalle.Saldo.ToString(specifier, culture))</td>
+                <td class="numero">@(detalle.TotalCantidad - detalle.TotalDevoluciones)</td>
+                <td class="numero">@(detalle.TotalMonto == 0 ? "0" : detalle.TotalMonto.ToString(specifier, culture))</td>
+                <td class="numero">@(detalle.TotalImporte == 0 ? "0" : detalle.TotalImporte.ToString(specifier, culture))</td>
+                <td class="numero">@(detalle.TotalSaldo == 0 ? "0" : detalle.TotalSaldo.ToString(specifier, culture))</td>
             </tr>
 
         }

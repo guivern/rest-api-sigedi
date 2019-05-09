@@ -5,6 +5,7 @@
     var distribucionesAgrupadas = (IEnumerable<DistribucionDetalleAgrupado>) ViewData.Model["DistribucionDetalleAgrupado"];
     var resumen = (ResumenDistribuciones) ViewData.Model["Resumen"];
     var distribucionesV = (IEnumerable<DistribucionFecha>) ViewData.Model["DistribucionV"];
+    var distribucionesAgrupadasV = (IEnumerable<DistribucionDetalleAgrupado>) ViewData.Model["DistribucionDetalleAgrupadoV"];
     var culture = System.Globalization.CultureInfo.CreateSpecificCulture("es-ES");
     var specifier = "0,0";
     Layout = "_Layout";
@@ -50,14 +51,18 @@ tfoot{border-top: solid 1px gray;}
         <table>
             <thead>
                 <tr>
-                    <td colspan="2" style="text-align: left"><b>Artículo: </b>@(distribucionAgrupada.Distribuciones.ElementAt(0).NombreArticulo)<br><br></td>
+                    <td><b>Artículo:</b> @(distribucionAgrupada.Distribuciones.ElementAt(0).NombreArticulo)</td>
+                    
                 </tr>
-                
+                <tr>
+                    <td><b>Edición:</b> @(distribucionAgrupada.Distribuciones.ElementAt(0).NroEdicion.ToString()) - 
+                    @(distribucionAgrupada.Distribuciones.ElementAt(0).FechaEdicion?.Date.ToString("dd/MM/yyyy"))<br><br></td>
+                </tr>
+               
+        
                 <tr style="text-align: left;">
                     <th width ="15%">Vendedor</th>
-                    <th>Nro. Edición</th>
-                    <th width ="12%">Fecha Edición</th>
-                    <th class="numero">Precio Unit.</th>
+                    <th class="numero">Precio Unitario</th>
                     <th class="numero">Cantidad Vendida</th>
                     <th class="numero">Monto</th>
                     <th class="numero">Importe</th>
@@ -65,24 +70,24 @@ tfoot{border-top: solid 1px gray;}
                 </tr>
             </thead>
             <tbody>
-            @foreach (var detalle in distribucionAgrupada.Distribuciones)
+            @foreach (var detalle in distribucionesAgrupadasV.Where(a => a.IdEdicion == distribucionAgrupada.IdEdicion 
+            && a.IdArticulo == distribucionAgrupada.IdArticulo 
+            && a.FechaCreacion == distribucionAgrupada.FechaCreacion ))
             {
                 <tr>
-                    <td>@detalle.NombreVendedor.ToString()</td>
-                    <td>@detalle.NroEdicion.ToString()</td>
-                    <td>@detalle.FechaEdicion.Value.Date.ToString("dd/MM/yyyy")</td>
-                    <td class="numero">@detalle.PrecioRendicion</td>
-                    <td class="numero">@(detalle.Cantidad - detalle.Devoluciones)</td>
-                    <td class="numero">@(detalle.Monto == 0 ? "0" : detalle.Monto.ToString(specifier, culture))</td>
-                    <td class="numero">@(detalle.Importe == 0 ? "0" : detalle.Importe.Value.ToString(specifier, culture))</td>
-                    <td class="numero">@(detalle.Saldo == 0 ? "0" : detalle.Saldo.ToString(specifier, culture))</td>
+                    <td>@detalle.NombreVendedor</td>
+                    <td class="numero">@(detalle.PrecioUnitario?.ToString(specifier, culture))</td>
+                    <td class="numero">@(detalle.TotalCantidad - detalle.TotalDevoluciones)</td>
+                    <td class="numero">@(detalle.TotalMonto == 0 ? "0" : detalle.TotalMonto.ToString(specifier, culture))</td>
+                    <td class="numero">@(detalle.TotalImporte == 0 ? "0" : detalle.TotalImporte.ToString(specifier, culture))</td>
+                    <td class="numero">@(detalle.TotalSaldo == 0 ? "0" : detalle.TotalSaldo.ToString(specifier, culture))</td>
                 </tr>
 
             }
             </tbody>
             <tfoot style="border-top: solid 1px gray;">
                 <tr>
-                    <td colspan="4"></td>
+                    <td colspan="2"></td>
                     <th class="numero">@(distribucionAgrupada.TotalCantidad - distribucionAgrupada.TotalDevoluciones)</th>
                     <th class="numero">@(distribucionAgrupada.TotalMonto == 0 ? "0" : distribucionAgrupada.TotalMonto.ToString(specifier, culture))</th>
                     <th class="numero">@(distribucionAgrupada.TotalImporte == 0 ? "0" : distribucionAgrupada.TotalImporte.ToString(specifier, culture))</th>
