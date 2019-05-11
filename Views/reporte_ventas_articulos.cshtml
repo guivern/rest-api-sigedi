@@ -51,11 +51,11 @@ tfoot{border-top: solid 1px gray;}
         <table>
             <thead>
                 <tr>
-                    <td><b>Artículo:</b> @(distribucionAgrupada.Distribuciones.ElementAt(0).NombreArticulo)</td>
+                    <td colspan="4" align="left"><b>Artículo:</b> @(distribucionAgrupada.Distribuciones.ElementAt(0).NombreArticulo)</td>
                     
                 </tr>
                 <tr>
-                    <td><b>Edición:</b> @(distribucionAgrupada.Distribuciones.ElementAt(0).NroEdicion.ToString()) - 
+                    <td colspan="4" align="left"><b>Edición:</b> @(distribucionAgrupada.Distribuciones.ElementAt(0).NroEdicion.ToString()) - 
                     @(distribucionAgrupada.Distribuciones.ElementAt(0).FechaEdicion?.Date.ToString("dd/MM/yyyy"))<br><br></td>
                 </tr>
                
