@@ -250,63 +250,352 @@ namespace rest_api_sigedi.Controllers
         }
 
         [HttpGet("reporte/ventas/")]
-        public async Task<IActionResult> GetReporteVentas([FromQuery] DateTime fechaInicio, [FromQuery] DateTime fechaFin){
+        public async Task<IActionResult> GetReporteVentas([FromQuery] DateTime fechaInicio, [FromQuery] DateTime fechaFin, [FromQuery] String tipo){
 
-            IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadas =
-            await _context.DistribucionDetalles
-            .Include(d => d.Distribucion)
-            .ThenInclude(d => d.Vendedor)
-            .Include(d => d.Edicion)
-            .ThenInclude(e => e.Articulo)
-            .Include(d => d.Edicion)
-            .ThenInclude(e => e.Precio)
-            .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
-            && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
-            && !d.Distribucion.Anulado)
-            .OrderBy(r => r.Id)
-            .GroupBy( //agrupamos distribuciones por vendedor
-                r => r.Distribucion.Vendedor.Id,
-                r => r,
-                (key, g) => new DistribucionDetalleAgrupado{
-                    IdVendedor = key,
-                    TotalMonto = g.Sum( x=> x.Monto),
-                    TotalImporte = (decimal) g.Sum( x=> x.Importe), 
-                    TotalSaldo = g.Sum( x=> x.Saldo),
-                    Distribuciones = g.ToList()
-                })
-            .ToListAsync();
+            if( tipo == "Vendedores"){
             
+                IEnumerable<DistribucionFecha> distribucionV =
+                await _context.Distribuciones
+                .Where(d => d.FechaCreacion.Date >= fechaInicio.Date
+                && d.FechaCreacion.Date <= fechaFin.Date
+                && !d.Anulado && !d.Editable)
+                .OrderBy(r => r.Id)
+                .GroupBy(
+                    c => new {
+                        FechaCreacionP = c.FechaCreacion.Date,
+                        
+                    })
+                    .Select(g => new DistribucionFecha(){
+                        
+                        FechaCreacion = g.Key.FechaCreacionP,
+                        DistribucionesFecha = g.ToList()
 
-            // resumen general del reporte
-            ResumenDistribuciones resumen = new ResumenDistribuciones()
-            {
-                TotalDistribuciones = distribucionesAgrupadas.Sum(d => d.TotalMonto),
-                TotalIngresos = distribucionesAgrupadas.Sum(d => d.TotalImporte),
-                TotalDeudas = distribucionesAgrupadas.Sum(d => d.TotalSaldo),
-                FechaInicioResumen = fechaInicio,
-                FechaFinResumen = fechaFin
-            };
+                    })
+                .ToListAsync();
 
-            // enlazamos los querys a la vista
-            var model = new Dictionary<string, object>
-            {
-                ["DistribucionDetalleAgrupado"] = distribucionesAgrupadas,
-                ["Resumen"] = resumen
-                // si hay mas querys agregamos aqui
-            };
+                //VENTAS POR VENDEDOR
 
-            // esta parte va a ser igual en todos los reportes
-            // lo unico que cambiaria el nombre de la vista en el RenderAsync() 
-            // y el nombre del reporte en el File()
-            var wkhtmltopdfpath = _configuration.GetSection("Reportes:WkBinPath").Get<string>();
-            var html = await _viewRender.RenderAsync("reporte_ventas_diarias", model);
-            var wkhtmltopdf = new FileInfo(wkhtmltopdfpath);
-            var converter = new HtmlToPdfConverter(wkhtmltopdf);
-            var pdf = converter.ConvertToPdf(html);
+                IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadas =
+                await _context.DistribucionDetalles
+                .Include(d => d.Distribucion)
+                .ThenInclude(d => d.Vendedor)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Articulo)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Precio)
+                .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
+                && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
+                && !d.Distribucion.Anulado && !d.Editable)
+                .OrderBy(r => r.Distribucion.FechaCreacion)
+                .GroupBy( //agrupamos distribuciones por articulo
+                    c => new {
+                        IdVendedorP = c.Distribucion.Vendedor.Id,
+                        FechaCreacionP = c.Distribucion.FechaCreacion.Date,
+                        
+                    })
+                    .Select(g => new DistribucionDetalleAgrupado(){
+                        IdVendedor = g.Key.IdVendedorP,
+                        FechaCreacion = g.Key.FechaCreacionP,
+                        TotalMonto = g.Sum( x=> x.Monto),
+                        TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                        TotalSaldo = g.Sum( x=> x.Saldo),
+                        Distribuciones = g.ToList()
 
-            return File(pdf, MediaTypeNames.Application.Pdf,
-                    $"Reporte Ventas Diarias {DateTime.Now:yyyyMMdd-hhmmss}.pdf");
+                    })
+                .ToListAsync();
+                
+                IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadasAV =
+                await _context.DistribucionDetalles
+                .Include(d => d.Distribucion)
+                .ThenInclude(d => d.Vendedor)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Articulo)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Precio)
+                .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
+                && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
+                && !d.Distribucion.Anulado && !d.Editable)
+                .OrderBy(r => r.Distribucion.FechaCreacion)
+                .GroupBy( //agrupamos distribuciones por articulo
+                    c => new {
+                        IdArticuloP = c.Edicion.Articulo,
+                        FechaCreacionP = c.Distribucion.FechaCreacion.Date,
+                        IdEdicionP = c.Edicion,
+                        IdVendedorP = c.Distribucion.Vendedor
+                    })
+                    .Select(g => new DistribucionDetalleAgrupado(){
+                        IdArticulo = g.Key.IdArticuloP.Id,
+                        FechaCreacion = g.Key.FechaCreacionP,
+                        IdEdicion = g.Key.IdEdicionP.Id,
+                        IdVendedor = g.Key.IdVendedorP.Id,
+                        NombreArticulo = g.Key.IdArticuloP.Descripcion,
+                        NroEdicion = g.Key.IdEdicionP.NroEdicion,
+                        FechaEdicion = g.Key.IdEdicionP.FechaEdicion,
+                        TotalCantidad = g.Sum( x => x.Cantidad),
+                        TotalDevoluciones = g.Sum( x => x.Devoluciones),
+                        TotalMonto = g.Sum( x=> x.Monto),
+                        TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                        TotalSaldo = g.Sum( x=> x.Saldo),
+                        Distribuciones = g.ToList()
 
+                    })
+                .ToListAsync();
+
+                // resumen general del reporte
+                ResumenDistribuciones resumen = new ResumenDistribuciones()
+                {
+                    TotalDistribuciones = distribucionesAgrupadas.Sum(d => d.TotalMonto),
+                    TotalIngresos = distribucionesAgrupadas.Sum(d => d.TotalImporte),
+                    TotalDeudas = distribucionesAgrupadas.Sum(d => d.TotalSaldo),
+                    FechaInicioResumen = fechaInicio,
+                    FechaFinResumen = fechaFin
+                };
+
+                // enlazamos los querys a la vista
+                var model = new Dictionary<string, object>
+                {
+                    ["DistribucionDetalleAgrupado"] = distribucionesAgrupadas,
+                    ["Resumen"] = resumen,
+                    ["DistribucionV"] = distribucionV,
+                    ["DistribucionDetalleAgrupadoAV"] = distribucionesAgrupadasAV,
+                    // si hay mas querys agregamos aqui
+                };
+
+                // esta parte va a ser igual en todos los reportes
+                // lo unico que cambiaria el nombre de la vista en el RenderAsync() 
+                // y el nombre del reporte en el File()
+                var wkhtmltopdfpath = _configuration.GetSection("Reportes:WkBinPath").Get<string>();
+                var html = await _viewRender.RenderAsync("reporte_ventas_vendedores", model);
+                var wkhtmltopdf = new FileInfo(wkhtmltopdfpath);
+                var converter = new HtmlToPdfConverter(wkhtmltopdf);
+                var pdf = converter.ConvertToPdf(html);
+
+                return File(pdf, MediaTypeNames.Application.Pdf,
+                        $"Reporte Ventas Vendedor {DateTime.Now:yyyyMMdd-hhmmss}.pdf");
+
+            }else if(tipo == "Diarias"){
+
+                //VENTAS DIARIAS
+
+                IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadas =
+                await _context.DistribucionDetalles
+                .Include(d => d.Distribucion)
+                .ThenInclude(d => d.Vendedor)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Articulo)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Precio)
+                .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
+                && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
+                && !d.Distribucion.Anulado && !d.Editable)
+                .OrderBy(r => r.Id)
+                .GroupBy( //agrupamos distribuciones por fechaCreacion
+                    r => r.Distribucion.FechaCreacion.Date,
+                    r => r,
+                    (key, g) => new DistribucionDetalleAgrupado{
+                        FechaCreacion = key,
+                        TotalMonto = g.Sum( x=> x.Monto),
+                        TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                        TotalSaldo = g.Sum( x=> x.Saldo),
+                        Distribuciones = g.ToList()
+                    })
+                .ToListAsync();  
+
+                IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadasA =
+                await _context.DistribucionDetalles
+                .Include(d => d.Distribucion)
+                .ThenInclude(d => d.Vendedor)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Articulo)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Precio)
+                .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
+                && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
+                && !d.Distribucion.Anulado && !d.Editable)
+                .OrderBy(r => r.Distribucion.FechaCreacion)
+                .GroupBy( //agrupamos distribuciones por articulo
+                    c => new {
+                        IdArticuloP = c.Edicion.Articulo,
+                        FechaCreacionP = c.Distribucion.FechaCreacion.Date,
+                        IdEdicionP = c.Edicion
+                    })
+                    .Select(g => new DistribucionDetalleAgrupado(){
+                        IdArticulo = g.Key.IdArticuloP.Id,
+                        FechaCreacion = g.Key.FechaCreacionP,
+                        IdEdicion = g.Key.IdEdicionP.Id,
+                        NombreArticulo = g.Key.IdArticuloP.Descripcion,
+                        NroEdicion = g.Key.IdEdicionP.NroEdicion,
+                        FechaEdicion = g.Key.IdEdicionP.FechaEdicion,
+                        TotalCantidad = g.Sum( x => x.Cantidad),
+                        TotalDevoluciones = g.Sum( x => x.Devoluciones),
+                        TotalMonto = g.Sum( x=> x.Monto),
+                        TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                        TotalSaldo = g.Sum( x=> x.Saldo),
+                        Distribuciones = g.ToList()
+
+                    })
+                .ToListAsync();
+
+                // resumen general del reporte
+                ResumenDistribuciones resumen = new ResumenDistribuciones()
+                {
+                    TotalDistribuciones = distribucionesAgrupadas.Sum(d => d.TotalMonto),
+                    TotalIngresos = distribucionesAgrupadas.Sum(d => d.TotalImporte),
+                    TotalDeudas = distribucionesAgrupadas.Sum(d => d.TotalSaldo),
+                    FechaInicioResumen = fechaInicio,
+                    FechaFinResumen = fechaFin
+                };
+
+                // enlazamos los querys a la vista
+                var model = new Dictionary<string, object>
+                {
+                    ["DistribucionDetalleAgrupado"] = distribucionesAgrupadas,
+                    ["Resumen"] = resumen,
+                    ["DistribucionDetalleAgrupadoA"] = distribucionesAgrupadasA,
+                    // si hay mas querys agregamos aqui
+                };
+
+                // esta parte va a ser igual en todos los reportes
+                // lo unico que cambiaria el nombre de la vista en el RenderAsync() 
+                // y el nombre del reporte en el File()
+                var wkhtmltopdfpath = _configuration.GetSection("Reportes:WkBinPath").Get<string>();
+                var html = await _viewRender.RenderAsync("reporte_ventas_diarias", model);
+                var wkhtmltopdf = new FileInfo(wkhtmltopdfpath);
+                var converter = new HtmlToPdfConverter(wkhtmltopdf);
+                var pdf = converter.ConvertToPdf(html);
+
+                return File(pdf, MediaTypeNames.Application.Pdf,
+                        $"Reporte Ventas Diarias {DateTime.Now:yyyyMMdd-hhmmss}.pdf");
+
+            }else if(tipo == "Articulos"){
+
+                //VENTAS POR ARTICULOS
+
+                IEnumerable<DistribucionFecha> distribucionV =
+                await _context.Distribuciones
+                .Where(d => d.FechaCreacion.Date >= fechaInicio.Date
+                && d.FechaCreacion.Date <= fechaFin.Date
+                && !d.Anulado && !d.Editable)
+                .OrderBy(r => r.Id)
+                .GroupBy(
+                    c => new {
+                        FechaCreacionP = c.FechaCreacion.Date,
+                        
+                    })
+                    .Select(g => new DistribucionFecha(){
+                        
+                        FechaCreacion = g.Key.FechaCreacionP,
+                        DistribucionesFecha = g.ToList()
+
+                    })
+                .ToListAsync();
+                
+                IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadas =
+                await _context.DistribucionDetalles
+                .Include(d => d.Distribucion)
+                .ThenInclude(d => d.Vendedor)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Articulo)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Precio)
+                .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
+                && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
+                && !d.Distribucion.Anulado && !d.Editable)
+                .OrderBy(r => r.Distribucion.FechaCreacion)
+                .GroupBy( //agrupamos distribuciones por articulo
+                    c => new {
+                        IdArticuloP = c.Edicion.Articulo.Id,
+                        FechaCreacionP = c.Distribucion.FechaCreacion.Date,
+                        IdEdicionP = c.Edicion.Id,
+                    })
+                    .Select(g => new DistribucionDetalleAgrupado(){
+                        IdArticulo = g.Key.IdArticuloP,
+                        FechaCreacion = g.Key.FechaCreacionP,
+                        IdEdicion = g.Key.IdEdicionP,
+                        TotalCantidad = g.Sum( x => x.Cantidad),
+                        TotalDevoluciones = g.Sum( x => x.Devoluciones),
+                        TotalMonto = g.Sum( x=> x.Monto),
+                        TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                        TotalSaldo = g.Sum( x=> x.Saldo),
+                        Distribuciones = g.ToList()
+
+                    })
+                .ToListAsync();
+
+
+                IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadasVendedor =
+                await _context.DistribucionDetalles
+                .Include(d => d.Distribucion)
+                .ThenInclude(d => d.Vendedor)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Articulo)
+                .Include(d => d.Edicion)
+                .ThenInclude(e => e.Precio)
+                .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
+                && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
+                && !d.Distribucion.Anulado && !d.Editable)
+                .OrderBy(r => r.Distribucion.FechaCreacion)
+                .GroupBy( //agrupamos distribuciones por articulo
+                    c => new {
+                        IdArticuloP = c.Edicion.Articulo.Id,
+                        FechaCreacionP = c.Distribucion.FechaCreacion.Date,
+                        IdEdicionP = c.Edicion,
+                        IdVendedorP = c.Distribucion.Vendedor,
+    
+                    })
+                    .Select(g => new DistribucionDetalleAgrupado(){
+                        IdArticulo = g.Key.IdArticuloP,
+                        FechaCreacion = g.Key.FechaCreacionP,
+                        IdEdicion = g.Key.IdEdicionP.Id,
+                        IdVendedor = g.Key.IdVendedorP.Id,
+                        NombreVendedor = g.Key.IdVendedorP.NombreCompleto,
+                        PrecioUnitario = g.Key.IdEdicionP.PrecioRendicion,
+                        TotalCantidad = g.Sum( x => x.Cantidad),
+                        TotalDevoluciones = g.Sum( x => x.Devoluciones),
+                        TotalMonto = g.Sum( x=> x.Monto),
+                        TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                        TotalSaldo = g.Sum( x=> x.Saldo),
+                        Distribuciones = g.ToList()
+
+                    })
+                .ToListAsync();
+
+
+
+                // resumen general del reporte
+                ResumenDistribuciones resumen = new ResumenDistribuciones()
+                {
+                    TotalDistribuciones = distribucionesAgrupadas.Sum(d => d.TotalMonto),
+                    TotalIngresos = distribucionesAgrupadas.Sum(d => d.TotalImporte),
+                    TotalDeudas = distribucionesAgrupadas.Sum(d => d.TotalSaldo),
+                    FechaInicioResumen = fechaInicio,
+                    FechaFinResumen = fechaFin
+                };
+
+                // enlazamos los querys a la vista
+                var model = new Dictionary<string, object>
+                {
+                    ["DistribucionDetalleAgrupado"] = distribucionesAgrupadas,
+                    ["Resumen"] = resumen,
+                    ["DistribucionV"] = distribucionV,
+                    ["DistribucionDetalleAgrupadoV"] = distribucionesAgrupadasVendedor,
+                    // si hay mas querys agregamos aqui
+                };
+
+                // esta parte va a ser igual en todos los reportes
+                // lo unico que cambiaria el nombre de la vista en el RenderAsync() 
+                // y el nombre del reporte en el File()
+                var wkhtmltopdfpath = _configuration.GetSection("Reportes:WkBinPath").Get<string>();
+                var html = await _viewRender.RenderAsync("reporte_ventas_articulos", model);
+                var wkhtmltopdf = new FileInfo(wkhtmltopdfpath);
+                var converter = new HtmlToPdfConverter(wkhtmltopdf);
+                var pdf = converter.ConvertToPdf(html);
+
+                return File(pdf, MediaTypeNames.Application.Pdf,
+                        $"Reporte Ventas Articulos {DateTime.Now:yyyyMMdd-hhmmss}.pdf");
+
+            }
+            return NoContent();
         }
     }
 
@@ -355,6 +644,21 @@ namespace rest_api_sigedi.Controllers
         public Decimal TotalImporte {get; set;}
         public Decimal TotalSaldo {get; set;}
         public IEnumerable<DistribucionDetalle> Distribuciones { get; set; }
+        public DateTime FechaCreacion {get; set;}
+        public long IdArticulo {get; set;}
+        public long TotalCantidad {get; set;}
+        public long? TotalDevoluciones {get; set;}
+        public long IdEdicion {get; set;}
+        public String NombreVendedor {get; set;}
+        public decimal? PrecioUnitario {get; set;}
+        public string NombreArticulo {get; set;}
+        public long NroEdicion {get; set;}
+        public DateTime? FechaEdicion {get; set;}
+    }
+
+    public class DistribucionFecha{
+        public DateTime FechaCreacion {get; set;}
+        public IEnumerable<Distribucion> DistribucionesFecha { get; set; }
     }
 
 }
