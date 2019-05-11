@@ -258,7 +258,7 @@ namespace rest_api_sigedi.Controllers
                 await _context.Distribuciones
                 .Where(d => d.FechaCreacion.Date >= fechaInicio.Date
                 && d.FechaCreacion.Date <= fechaFin.Date
-                && !d.Anulado)
+                && !d.Anulado && !d.Editable)
                 .OrderBy(r => r.Id)
                 .GroupBy(
                     c => new {
@@ -285,7 +285,7 @@ namespace rest_api_sigedi.Controllers
                 .ThenInclude(e => e.Precio)
                 .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
                 && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
-                && !d.Distribucion.Anulado)
+                && !d.Distribucion.Anulado && !d.Editable)
                 .OrderBy(r => r.Distribucion.FechaCreacion)
                 .GroupBy( //agrupamos distribuciones por articulo
                     c => new {
@@ -314,7 +314,7 @@ namespace rest_api_sigedi.Controllers
                 .ThenInclude(e => e.Precio)
                 .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
                 && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
-                && !d.Distribucion.Anulado)
+                && !d.Distribucion.Anulado && !d.Editable)
                 .OrderBy(r => r.Distribucion.FechaCreacion)
                 .GroupBy( //agrupamos distribuciones por articulo
                     c => new {
@@ -387,7 +387,7 @@ namespace rest_api_sigedi.Controllers
                 .ThenInclude(e => e.Precio)
                 .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
                 && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
-                && !d.Distribucion.Anulado)
+                && !d.Distribucion.Anulado && !d.Editable)
                 .OrderBy(r => r.Id)
                 .GroupBy( //agrupamos distribuciones por fechaCreacion
                     r => r.Distribucion.FechaCreacion.Date,
@@ -411,7 +411,7 @@ namespace rest_api_sigedi.Controllers
                 .ThenInclude(e => e.Precio)
                 .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
                 && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
-                && !d.Distribucion.Anulado)
+                && !d.Distribucion.Anulado && !d.Editable)
                 .OrderBy(r => r.Distribucion.FechaCreacion)
                 .GroupBy( //agrupamos distribuciones por articulo
                     c => new {
@@ -475,7 +475,7 @@ namespace rest_api_sigedi.Controllers
                 await _context.Distribuciones
                 .Where(d => d.FechaCreacion.Date >= fechaInicio.Date
                 && d.FechaCreacion.Date <= fechaFin.Date
-                && !d.Anulado)
+                && !d.Anulado && !d.Editable)
                 .OrderBy(r => r.Id)
                 .GroupBy(
                     c => new {
@@ -500,7 +500,7 @@ namespace rest_api_sigedi.Controllers
                 .ThenInclude(e => e.Precio)
                 .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
                 && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
-                && !d.Distribucion.Anulado)
+                && !d.Distribucion.Anulado && !d.Editable)
                 .OrderBy(r => r.Distribucion.FechaCreacion)
                 .GroupBy( //agrupamos distribuciones por articulo
                     c => new {
@@ -533,7 +533,7 @@ namespace rest_api_sigedi.Controllers
                 .ThenInclude(e => e.Precio)
                 .Where(d => d.Distribucion.FechaCreacion.Date >= fechaInicio.Date
                 && d.Distribucion.FechaCreacion.Date <= fechaFin.Date
-                && !d.Distribucion.Anulado)
+                && !d.Distribucion.Anulado && !d.Editable)
                 .OrderBy(r => r.Distribucion.FechaCreacion)
                 .GroupBy( //agrupamos distribuciones por articulo
                     c => new {
