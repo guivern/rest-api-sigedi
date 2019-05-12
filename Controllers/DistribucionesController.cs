@@ -249,6 +249,97 @@ namespace rest_api_sigedi.Controllers
             return Ok(deudas);
         }
 
+        [HttpGet("reporte/deudas/")]
+        public async Task<IActionResult> GetReporteDeudas(){
+            
+            IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadas =
+            await _context.DistribucionDetalles
+            .Include(d => d.Distribucion)
+            .ThenInclude(d => d.Vendedor)
+            .Include(d => d.Edicion)
+            .ThenInclude(e => e.Articulo)
+            .Include(d => d.Edicion)
+            .ThenInclude(e => e.Precio)
+            .Where(d => d.Activo && !d.Anulado)
+            .OrderBy(r => r.Distribucion.FechaCreacion)
+            .GroupBy( //agrupamos distribuciones por articulo
+                c => new {
+                    IdVendedorP = c.Distribucion.Vendedor.Id,        
+                })
+                .Select(g => new DistribucionDetalleAgrupado(){
+                    IdVendedor = g.Key.IdVendedorP,
+                    TotalMonto = g.Sum( x=> x.Monto),
+                    TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                    TotalSaldo = g.Sum( x=> x.Saldo),
+                    Distribuciones = g.ToList()
+
+                })
+            .ToListAsync();
+                
+            IEnumerable<DistribucionDetalleAgrupado> distribucionesAgrupadasAV =
+            await _context.DistribucionDetalles
+            .Include(d => d.Distribucion)
+            .ThenInclude(d => d.Vendedor)
+            .Include(d => d.Edicion)
+            .ThenInclude(e => e.Articulo)
+            .Include(d => d.Edicion)
+            .ThenInclude(e => e.Precio)
+            .Where(d => d.Activo && !d.Anulado)
+            .OrderBy(r => r.Distribucion.FechaCreacion)
+            .GroupBy( //agrupamos distribuciones por articulo
+                c => new {
+                    IdArticuloP = c.Edicion.Articulo,
+                    IdEdicionP = c.Edicion,
+                    IdVendedorP = c.Distribucion.Vendedor
+                })
+                .Select(g => new DistribucionDetalleAgrupado(){
+                    IdArticulo = g.Key.IdArticuloP.Id,
+                    IdEdicion = g.Key.IdEdicionP.Id,
+                    IdVendedor = g.Key.IdVendedorP.Id,
+                    NombreArticulo = g.Key.IdArticuloP.Descripcion,
+                    NroEdicion = g.Key.IdEdicionP.NroEdicion,
+                    FechaEdicion = g.Key.IdEdicionP.FechaEdicion,
+                    TotalCantidad = g.Sum( x => x.Cantidad),
+                    TotalDevoluciones = g.Sum( x => x.Devoluciones),
+                    TotalMonto = g.Sum( x=> x.Monto),
+                    TotalImporte = (decimal) g.Sum( x=> x.Importe), 
+                    TotalSaldo = g.Sum( x=> x.Saldo),
+                    Distribuciones = g.ToList()
+
+                })
+            .ToListAsync();
+
+            // resumen general del reporte
+            ResumenDistribuciones resumen = new ResumenDistribuciones()
+            {
+                TotalDistribuciones = distribucionesAgrupadas.Sum(d => d.TotalMonto),
+                TotalIngresos = distribucionesAgrupadas.Sum(d => d.TotalImporte),
+                TotalDeudas = distribucionesAgrupadas.Sum(d => d.TotalSaldo)
+            };
+
+            // enlazamos los querys a la vista
+            var model = new Dictionary<string, object>
+            {
+                ["DistribucionDetalleAgrupado"] = distribucionesAgrupadas,
+                ["Resumen"] = resumen,
+                ["DistribucionDetalleAgrupadoAV"] = distribucionesAgrupadasAV,
+                // si hay mas querys agregamos aqui
+            };
+
+            // esta parte va a ser igual en todos los reportes
+            // lo unico que cambiaria el nombre de la vista en el RenderAsync() 
+            // y el nombre del reporte en el File()
+            var wkhtmltopdfpath = _configuration.GetSection("Reportes:WkBinPath").Get<string>();
+            var html = await _viewRender.RenderAsync("reporte_deudas", model);
+            var wkhtmltopdf = new FileInfo(wkhtmltopdfpath);
+            var converter = new HtmlToPdfConverter(wkhtmltopdf);
+            var pdf = converter.ConvertToPdf(html);
+
+            return File(pdf, MediaTypeNames.Application.Pdf,
+                $"Reporte Deudas {DateTime.Now:yyyyMMdd-hhmmss}.pdf");
+
+        }
+
         [HttpGet("reporte/ventas/")]
         public async Task<IActionResult> GetReporteVentas([FromQuery] DateTime fechaInicio, [FromQuery] DateTime fechaFin, [FromQuery] String tipo){
 
