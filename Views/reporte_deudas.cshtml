@@ -1,0 +1,95 @@
+@using rest_api_sigedi.Models;
+@using rest_api_sigedi.Controllers;
+@{
+    // obtenemos los datos del controller
+    var distribucionesAgrupadas = (IEnumerable<DistribucionDetalleAgrupado>) ViewData.Model["DistribucionDetalleAgrupado"];
+    var resumen = (ResumenDistribuciones) ViewData.Model["Resumen"];
+    var distribucionesAgrupadasAV = (IEnumerable<DistribucionDetalleAgrupado>) ViewData.Model["DistribucionDetalleAgrupadoAV"];
+    var culture = System.Globalization.CultureInfo.CreateSpecificCulture("es-ES");
+    var specifier = "0,0";
+    Layout = "_Layout";
+}
+<style>
+table{width:  100%; border-collapse: collapse;}
+tfoot{border-top: solid 1px gray;}
+/*thead{border-bottom: solid 1px gray}*/
+.tablaConBordes{border: solid 1px black; border-collapse: separate; padding: 5px 20px;}
+.numero{text-align: right}
+.resumen{width:  40%;}
+</style>
+<table class="tablaConBordes">
+    <thead>
+        <tr>
+            <th colspan="4">Reporte de Deudas</th>
+        </tr>
+    </thead>
+    <tr>
+        <td><b>Fecha Reporte:</b></td>
+        <td>@System.DateTime.Now</td>
+    </tr>
+</table>
+<br>
+<h3>Deudas</h3>
+<hr><br>
+
+@foreach (var distribucionAgrupada in distribucionesAgrupadas)
+{
+    <table>
+        <thead>
+            <tr>
+                <td colspan="4" align="left"><b>Vendedor: </b>@(distribucionAgrupada.Distribuciones.ElementAt(0).NombreVendedor)<br><br></td>
+            </tr>
+            <tr style="text-align: left;">
+                <th width ="15%">Artículo</th>
+                <th>Nro. Edición</th>
+                <th width ="12%">Fecha Edición</th>
+                <th class="numero">Cantidad</th>
+                <th class="numero">Devoluciones</th>
+                <th class="numero">Monto</th>
+                <th class="numero">Importe</th>
+                <th class="numero">Deuda</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var detalle in distribucionesAgrupadasAV.Where(a => a.IdVendedor == distribucionAgrupada.IdVendedor))
+        {
+            <tr>
+                <td>@detalle.NombreArticulo.ToString()</td>
+                <td>@detalle.NroEdicion.ToString()</td>
+                <td>@detalle.FechaEdicion.Value.Date.ToString("dd/MM/yyyy")</td>
+                <td class="numero">@(detalle.TotalCantidad)</td>
+                <td class="numero">@(detalle.TotalDevoluciones)</td>
+                <td class="numero">@(detalle.TotalMonto == 0 ? "0" : detalle.TotalMonto.ToString(specifier, culture))</td>
+                <td class="numero">@(detalle.TotalImporte == 0 ? "0" : detalle.TotalImporte.ToString(specifier, culture))</td>
+                <td class="numero">@(detalle.TotalSaldo == 0 ? "0" : detalle.TotalSaldo.ToString(specifier, culture))</td>
+            </tr>
+        }
+        </tbody>
+        <tfoot style="border-top: solid 1px gray;">
+            <tr>
+                <td colspan="5"></td>
+                <th class="numero">@(distribucionAgrupada.TotalMonto == 0 ? "0" : distribucionAgrupada.TotalMonto.ToString(specifier, culture))</th>
+                <th class="numero">@(distribucionAgrupada.TotalImporte == 0 ? "0" : distribucionAgrupada.TotalImporte.ToString(specifier, culture))</th>
+                <th class="numero">@(distribucionAgrupada.TotalSaldo == 0 ? "0" : distribucionAgrupada.TotalSaldo.ToString(specifier, culture))</th>
+            </tr>
+        </tfoot>
+    </table>
+    <br>
+}
+
+<h3>Resumen</h3>
+<hr><br>
+<table class="resumen" style="">
+    <tr>
+        <td><b>Monto Total:</b></td>
+        <td class="numero">@(resumen.TotalDistribuciones == 0 ? "0" : resumen.TotalDistribuciones.ToString(specifier, culture)) Gs.</td>
+    </tr>
+    <tr>
+        <td><b>Importe Total:</b></td>
+        <td class="numero">@(resumen.TotalIngresos == 0 ? "0" : resumen.TotalIngresos.ToString(specifier, culture)) Gs.</td>  
+    </tr>
+    <tr>
+        <td><b>Deuda Total Actual:</b></td>
+        <td class="numero">@(resumen.TotalDeudas == 0 ? "0" : resumen.TotalDeudas.ToString(specifier, culture)) Gs.</td>  
+    </tr>
+</table>
